@@ -72,7 +72,7 @@ local defaults = {
         BarCount = 2,
         X = 0,
         Y = 0,
-        Bar1 = { Height = 20, BarType = "HB", LeftText = "[UnitName]", RightText = "[CurrentHPSmart]" },
+        Bar1 = { Height = 20, BarType = "HB", LeftText = "[UnitName]", RightText = "[CurrHPSmart]" },
         Bar2 = { Height = 20, BarType = "PB", LeftText = "[PercPower]%%", RightText = "[CurrPowerSmart]" },
         Bar3 = { Height = 0, BarType = "EB", LeftText = "", RightText = "" },
         Bar4 = { Height = 0, BarType = "EB", LeftText = "", RightText = "" },

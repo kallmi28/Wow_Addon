@@ -118,8 +118,12 @@ local function generateScrollFrame(parent, barCount, unitTypeID)
     parent:ReleaseChildren()
     parent:PauseLayout()
 
+    local actualData = G_MyAddon.Frames[unitTypeID .. "Frame"].mainFrame
+
     -- Draw as many option as there is bars
     for i = 1, tonumber(barCount) do
+        local actualBarData = actualData.BarArr[i]
+
 
         -- Bar Setting Heading
         local h = AceGUI:Create("Heading")
@@ -136,7 +140,8 @@ local function generateScrollFrame(parent, barCount, unitTypeID)
         local sl = AceGUI:Create("Slider")
         sl:SetLabel("Height")
         -- ~ 50% of width
-        sl:SetRelativeWidth(0.5) 
+        sl:SetRelativeWidth(0.5)
+        sl:SetValue(actualBarData.Height)
         sl:SetSliderValues(1, 50, 1)
 
         rowA:AddChild(sl)
@@ -156,13 +161,36 @@ local function generateScrollFrame(parent, barCount, unitTypeID)
 
         local ebLeft = AceGUI:Create("EditBox")
         ebLeft:SetLabel("Text Left")
+        ebLeft:SetText(actualBarData.LeftText)
         ebLeft:SetRelativeWidth(0.5)
         rowB:AddChild(ebLeft)
 
         local ebRight = AceGUI:Create("EditBox")
         ebRight:SetLabel("Text Right")
+        ebRight:SetText(actualBarData.RightText)
         ebRight:SetRelativeWidth(0.5)
         rowB:AddChild(ebRight)
+
+         -- callbacks for each widget, calls update function of the corresponding bar
+        sl:SetCallback("OnValueChanged", function (widget, event, value)
+            actualBarData.Height = value
+            actualData:ApplySettings()
+        end)
+
+        -- dr:SetCallback("OnValueChanged", function (widget, event, value)
+        --     actualBarData.BarType = value
+        --     actualData:ApplySettings()
+        -- end)
+
+        ebLeft:SetCallback("OnEnterPressed", function (widget, event, value)
+            actualBarData.LeftText = value
+            actualData:ApplySettings()
+        end)
+
+        ebRight:SetCallback("OnEnterPressed", function (widget, event, value)
+            actualBarData.RightText = value
+            actualData:ApplySettings()
+        end)
 
     end
 
@@ -172,6 +200,7 @@ local function generateScrollFrame(parent, barCount, unitTypeID)
 end
 
 local function drawFramesPanel(widget, unitTypeID)
+    local actualData = G_MyAddon.Frames[unitTypeID .. "Frame"].mainFrame
 
     -- Main container for frame settings
     local mainRight = AceGUI:Create("SimpleGroup")
@@ -203,12 +232,14 @@ local function drawFramesPanel(widget, unitTypeID)
     local d1 = AceGUI:Create("Dropdown")
     d1:SetLabel("Anchor To Frame")
     d1:SetList(anchorFrameData)
+    d1:SetValue(actualData.AnchorToFrame)
     d1:SetRelativeWidth(0.5)
     r1:AddChild(d1)
 
     local d2 = AceGUI:Create("Dropdown")
     d2:SetLabel("Anchor To Point")
     d2:SetList(anchorPointData)
+    d2:SetValue(actualData.AnchorToPoint)
     d2:SetRelativeWidth(0.5)
     r1:AddChild(d2)
 
@@ -218,24 +249,28 @@ local function drawFramesPanel(widget, unitTypeID)
     local d3 = AceGUI:Create("Dropdown")
     d3:SetLabel("Anchor By Point")
     d3:SetList(anchorPointData)
-    -- d3:SetValue(actualData.AnchorByPoint)
+    d3:SetValue(actualData.AnchorByPoint)
     d3:SetRelativeWidth(0.5)
     r2:AddChild(d3)
 
-    local d4 = AceGUI:Create("Dropdown")
-    d4:SetLabel("Bars in Frame")
-    d4:SetList(barPresentData)
-    d4:SetRelativeWidth(0.5)
-    r2:AddChild(d4)
+
+    -- local d4 = AceGUI:Create("Dropdown")
+    -- d4:SetLabel("Bars in Frame")
+    -- d4:SetList(barPresentData)
+    -- d4:SetValue(tostring(actualData.BarsPerFrame))
+    -- d4:SetRelativeWidth(0.5)
+    -- r2:AddChild(d4)
 
     -- 3. Line: Slider
     local r3 = AddRow(topFrame)
-    local s1 = AceGUI:Create("Label"); s1:SetWidth(100);
+    local s1 = AceGUI:Create("Label");
+    s1:SetWidth(100);
     r3:AddChild(s1)
     
     local sc = AceGUI:Create("Slider")
     sc:SetLabel("Width")
     sc:SetSliderValues(1, 300, 1)
+    sc:SetValue(actualData.Width)
     sc:SetRelativeWidth(1)
     r3:AddChild(sc)
 
@@ -245,11 +280,13 @@ local function drawFramesPanel(widget, unitTypeID)
     local eb1 = AceGUI:Create("EditBox")
     eb1:SetLabel("X Offset")
     eb1:SetRelativeWidth(0.5)
+    eb1:SetText(tostring(actualData.X))
     r4:AddChild(eb1)
 
     local eb2 = AceGUI:Create("EditBox")
     eb2:SetLabel("Y Offset")
     eb2:SetRelativeWidth(0.5)
+    eb2:SetText(tostring(actualData.Y))
     r4:AddChild(eb2)
 
     -- --- 2. Lower part of panel  ---
@@ -267,8 +304,45 @@ local function drawFramesPanel(widget, unitTypeID)
     scroll:SetFullWidth(true)
     bottomFrame:AddChild(scroll)
 
-    -- TODO use correct value instead of 5
-    generateScrollFrame(scroll, 5, unitTypeID)
+
+    generateScrollFrame(scroll, actualData.BarsPerFrame, unitTypeID)
+
+    
+    d1:SetCallback("OnValueChanged", function (widget, event, value)
+        actualData.AnchorToFrame = value
+        actualData:ApplySettings()
+    end)
+
+    d2:SetCallback("OnValueChanged", function (widget, event, value)
+        actualData.AnchorToPoint = value
+        actualData:ApplySettings()
+    end)
+
+    d3:SetCallback("OnValueChanged", function (widget, event, value)
+        actualData.AnchorByPoint = value
+        actualData:ApplySettings()
+    end)
+
+    -- d4:SetCallback("OnValueChanged", function (widget, event, value)
+    --     actualData.BarsPerFrame = tonumber(value)
+    --     generateScrollFrame(scroll, value, unitTypeID)
+    --     actualData:ApplySettings()
+    -- end)
+
+    sc:SetCallback("OnValueChanged", function (widget, event, value)
+        actualData.Width = value
+        actualData:ApplySettings()
+    end)
+
+    eb1:SetCallback("OnEnterPressed", function (widget, event, value)
+        actualData.X = tonumber(value)
+        actualData:ApplySettings()
+    end)
+
+    eb2:SetCallback("OnEnterPressed", function (widget, event, value)
+        actualData.Y = tonumber(value)
+        actualData:ApplySettings()
+    end)
 
 end
 
@@ -454,16 +528,12 @@ SlashCmdList["MYADDON"] = function(msg)
 
     if msg == "reset" then
         G_defaultDataReset = true
-                for k, v in pairs(savedVar) do print("key:", k, "value:", v) end
-                for k, v in pairs(savedVar.PlayerFrame) do print("key:", k, "value:", v) end
 
         savedVar = {}
-        print("-0-----------------------")
         InitializeDefaults(savedVar, nil)
-        for k, v in pairs(savedVar) do print("key:", k, "value:", v) end
-                for k, v in pairs(savedVar.PlayerFrame) do print("key:", k, "value:", v) end
 
         print("|cff00ff00TestAddon:|r The settings have been reset to default.")
+
         -- reload UI to see the changes
         ReloadUI()
     elseif msg == "d" then
@@ -511,10 +581,8 @@ local function initFunction(self, event, addonName)
         savedVar = savedVar or {}
 
         print("I got here because of " .. event .. " of " .. addonName)
-                for k, v in pairs(savedVar.PlayerFrame) do print("key:", k, "value:", v) end
 
         InitializeDefaults(savedVar, nil)
-                        for k, v in pairs(savedVar.PlayerFrame) do print("key:", k, "value:", v) end
 
         G_MyAddon.SavedVars = savedVar
         G_MyAddon.Frames.PlayerFrame.mainFrame = Frame:New(savedVar.PlayerFrame, "player")
