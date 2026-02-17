@@ -1,0 +1,16 @@
+## Interface: 11508, 11507, 20505, 30405, 38000, 40402, 50503, 50502, 120001, 110207, 120000
+## Title: MyAddon
+## Notes: The best spaghetti code east of Italy
+## Author: Me
+## Category: Development Tools
+## SavedVariables: savedVar
+
+#@no-lib-strip@
+libs\AceGUI-3.0\AceGUI-3.0.xml
+
+
+MyAddon.lua
+stringManip.lua
+grid.lua
+Frame.lua
+defaults.lua
