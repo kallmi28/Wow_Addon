@@ -106,10 +106,10 @@ end)
 local function toggleGrid(widget, event, value)
     if value then
         G_MyAddon.SavedVars.General.ShowGrid = true
-        -- TODO show grid on screen
+            ChangeGridVisibility(true)
     else
         G_MyAddon.SavedVars.General.ShowGrid = false
-        -- TODO hide grid on screen
+            ChangeGridVisibility(false)
     end
 end
 
@@ -439,7 +439,8 @@ end)
 
 frame:SetCallback("OnClose", function(widget)
     if(G_MyAddon.SavedVars.General.ShowGrid == true) then
-        -- draw grid on screen
+        -- when closing the Option window, hide the grid
+        ChangeGridVisibility(false)
     end
 end)
 
@@ -470,7 +471,8 @@ SlashCmdList["MYADDON"] = function(msg)
             if(PlayerIsInCombat() == false) then
                 frame:Show()
                 if(G_MyAddon.SavedVars.General.ShowGrid == true) then
-                    -- draw grid on screen
+                    -- if the Show Grid option is true, show grid on Option Window open
+                    ChangeGridVisibility(true)
                 end
             end
         end
@@ -544,17 +546,3 @@ classColors = {
     ["DEMONHUNTER"] = {r = 0.64, g = 0.19, b = 0.79},
     ["EVOKER"] = {r = 0.20, g = 0.58, b = 0.50},
 }
-
-
-
-
-function G_FindChildByName (obj, name)
-    local children = {obj:GetChildren()}
-
-    for _, val in ipairs(children) do
-        if(val:GetDebugName() == name) then
-            return val
-        end
-    end
-    return nil
-end
