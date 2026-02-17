@@ -454,8 +454,14 @@ SlashCmdList["MYADDON"] = function(msg)
 
     if msg == "reset" then
         G_defaultDataReset = true
+                for k, v in pairs(savedVar) do print("key:", k, "value:", v) end
+                for k, v in pairs(savedVar.PlayerFrame) do print("key:", k, "value:", v) end
+
         savedVar = {}
+        print("-0-----------------------")
         InitializeDefaults(savedVar, nil)
+        for k, v in pairs(savedVar) do print("key:", k, "value:", v) end
+                for k, v in pairs(savedVar.PlayerFrame) do print("key:", k, "value:", v) end
 
         print("|cff00ff00TestAddon:|r The settings have been reset to default.")
         -- reload UI to see the changes
@@ -502,16 +508,33 @@ G_MyAddon.SavedVars = {}
 
 local function initFunction(self, event, addonName)
     if(event == "ADDON_LOADED" and addonName == "MyAddon")then
-    savedVar = savedVar or {}
+        savedVar = savedVar or {}
 
-    print("I got here because of " .. event .. " of " .. addonName)
+        print("I got here because of " .. event .. " of " .. addonName)
+                for k, v in pairs(savedVar.PlayerFrame) do print("key:", k, "value:", v) end
 
-    InitializeDefaults(savedVar, nil)
-    G_MyAddon.SavedVars = savedVar
- 
+        InitializeDefaults(savedVar, nil)
+                        for k, v in pairs(savedVar.PlayerFrame) do print("key:", k, "value:", v) end
+
+        G_MyAddon.SavedVars = savedVar
+        G_MyAddon.Frames.PlayerFrame.mainFrame = Frame:New(savedVar.PlayerFrame, "player")
+        G_MyAddon.Frames.TargetFrame.mainFrame = Frame:New(savedVar.TargetFrame, "target")
+        G_MyAddon.Frames.TargetOfTargetFrame.mainFrame = Frame:New(savedVar.TargetOfTargetFrame, "targettarget")
+        G_MyAddon.Frames.FocusFrame.mainFrame = Frame:New(savedVar.FocusFrame, "focus")
+        G_MyAddon.Frames.PetFrame.mainFrame = Frame:New(savedVar.PetFrame, "pet")
 
     elseif(event == "PLAYER_LOGOUT") then
         print("I will never see this, but config has been saved succesfully")
+        if(G_defaultDataReset == false) then
+            -- local error = nil
+            -- local qqq = error.test
+            G_MyAddon.Frames.PlayerFrame.mainFrame:Save(savedVar.PlayerFrame)
+            G_MyAddon.Frames.TargetFrame.mainFrame:Save(savedVar.TargetFrame)
+            G_MyAddon.Frames.TargetOfTargetFrame.mainFrame:Save(savedVar.TargetOfTargetFrame)
+            G_MyAddon.Frames.FocusFrame.mainFrame:Save(savedVar.FocusFrame)
+            G_MyAddon.Frames.PetFrame.mainFrame:Save(savedVar.PetFrame)
+
+        end
 
     elseif (event == "PLAYER_REGEN_DISABLED") then
         if frame:IsShown() then

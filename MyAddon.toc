@@ -10,5 +10,7 @@ libs\AceGUI-3.0\AceGUI-3.0.xml
 
 
 MyAddon.lua
+stringManip.lua
 grid.lua
+frame.lua
 defaults.lua

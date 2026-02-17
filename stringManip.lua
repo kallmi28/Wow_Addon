@@ -16,7 +16,7 @@ function getCurrHp (unit)
 end
 
 function getCurrHpSmart (unit)
-    return AbbreviateLargeNumbers(UnitHealth(unit))
+    return AbbreviateNumbers(UnitHealth(unit))
 end
 
 function getMaxHp (unit)
@@ -24,7 +24,7 @@ function getMaxHp (unit)
 end
 
 function getMaxHpSmart (unit)
-    return  AbbreviateLargeNumbers(UnitHealthMax(unit))
+    return  AbbreviateNumbers(UnitHealthMax(unit))
 end
 
 function getPercHp (unit)
@@ -44,7 +44,7 @@ function getCurrPower (unit)
 end
 
 function getCurrPowerSmart (unit)
-    return AbbreviateLargeNumbers(UnitPower(unit, UnitPowerType(unit)))
+    return AbbreviateNumbers(UnitPower(unit, UnitPowerType(unit)))
 end
 
 function getMaxPower (unit)
@@ -52,7 +52,7 @@ function getMaxPower (unit)
 end
 
 function getMaxPowerSmart (unit)
-    return AbbreviateLargeNumbers(UnitPowerMax(unit, UnitPowerType(unit)))
+    return AbbreviateNumbers(UnitPowerMax(unit, UnitPowerType(unit)))
 end
 
 function getPercPower (unit)
