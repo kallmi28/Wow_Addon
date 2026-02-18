@@ -32,27 +32,31 @@ function getPercHp (unit)
 end
 
 function getMissingHp (unit)
-    return  "MISSING HP"
+    return  UnitHealthMissing(unit)
 end
 
 function getMissingHpSmart (unit)
-    return  "MISSING SMART HP"
+    return  AbbreviateNumbers(UnitHealthMissing(unit))
 end
 
 function getCurrPower (unit)
-    return UnitPower(unit, UnitPowerType(unit))
+    local s = UnitPowerType(unit)
+    return UnitPower(unit, s)
 end
 
 function getCurrPowerSmart (unit)
-    return AbbreviateNumbers(UnitPower(unit, UnitPowerType(unit)))
+    local s = UnitPowerType(unit)
+    return AbbreviateNumbers(UnitPower(unit, s))
 end
 
 function getMaxPower (unit)
-    return UnitPowerMax(unit, UnitPowerType(unit))
+    local s = UnitPowerType(unit)
+    return UnitPowerMax(unit, s)
 end
 
 function getMaxPowerSmart (unit)
-    return AbbreviateNumbers(UnitPowerMax(unit, UnitPowerType(unit)))
+    local s = UnitPowerType(unit)
+    return AbbreviateNumbers(UnitPowerMax(unit, s))
 end
 
 function getPercPower (unit)
@@ -60,11 +64,11 @@ function getPercPower (unit)
 end
 
 function getMissingPower (unit)
-    return "MISSING POWER"
+    return  UnitPowerMissing(unit)
 end
 
 function getMissingPowerSmart (unit)
-    return "MISSING POWER SMART"
+    return  AbbreviateNumbers(UnitPowerMissing(unit))
 end
 
 function getUnitName (unit)
