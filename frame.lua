@@ -73,10 +73,11 @@ local subFunctions = {
 
 for index, value in ipairs(keywords) do
     mask = string.gsub(mask, "%[" .. value .. "%]", "%%" .. index .. "$s")
-    --print(index, mask)
+    -- print(index, mask)
 end
-
+    
     mask = string.format(mask, callAndExpand (subFunctions))
+    -- print (mask)
     return mask
 end
 

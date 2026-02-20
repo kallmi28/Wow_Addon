@@ -103,5 +103,6 @@ end
 
 function getStatusAfk (unit)
     -- TODO think about solution which stores last known value before combat
-    return PlayerIsInCombat() and "" or(UnitIsAFK(unit) and "(AFK)" or (UnitIsDND(unit) and "(DND)" or ""))
+    --print(GetServerTime(), "AFK checking")
+    return PlayerIsInCombat() and "" or (UnitIsAFK(unit) and "(AFK)" or (UnitIsDND(unit) and "(DND)" or ""))
 end

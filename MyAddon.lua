@@ -74,34 +74,6 @@ local anchorFrameData = {
     ["FOCUS"] = "Focus Frame",
 }
 
-
-
--- Main Option Window
-local frame = AceGUI:Create("Frame")
-frame:SetTitle("Addon Name") -- TODO think about better name of addon
-frame:SetLayout("Fill")
-frame:SetWidth(600)
-frame:SetHeight(600)
-
--- Block all resizing scripts
-frame.sizer_se:SetScript("OnMouseDown",nil)
-frame.sizer_e:SetScript("OnMouseDown",nil)
-frame.sizer_s:SetScript("OnMouseDown",nil)
-
--- TreeGroup (left side of options)
-local tree = AceGUI:Create("TreeGroup")
-tree:SetTree(treeData)
-tree:SetFullWidth(true)
-tree:SetFullHeight(true)
-
-frame:AddChild(tree)
-
--- Default option selected for TreeGroup
-frame:DoLayout()
-C_Timer.After(0.05, function()
-    tree:SelectByPath("p1")
-end)
-
 -- Show or hide grid on screen
 local function toggleGrid(widget, event, value)
     if value then
@@ -468,56 +440,6 @@ local function drawDisableBlizzSetting(widget)
 end
 
 
-
-
-tree:SetCallback("OnGroupSelected", function(widget, event, groupPath)
-    widget:ReleaseChildren()
-    widget:SetLayout("Fill")
-
-    if(groupPath == "p3")then
-        widget:SelectByPath("p3", "p3_1")
-        return
-    end
-
-
-    local drawPanelSwitch = {
-        ["p1"]          = drawGeneralSetting,
-        ["p2"]          = drawEnableFrames,
-        ["p3\001p3_1"]  = drawPlayerSetting,
-        ["p3\001p3_2"]  = drawPetSetting,
-        ["p3\001p3_3"]  = drawTargetSetting,
-        ["p3\001p3_4"]  = drawToTSetting,
-        ["p3\001p3_5"]  = drawFocusSetting,
-        ["p3\001p3_6"]  = drawFocusTargetSetting,
-        ["p3\001p3_7"]  = drawPartySetting,
-        ["p3\001p3_8"]  = drawRaidSetting,
-        ["p3\001p3_9"]  = drawBossSetting,
-        ["p3\001p3_10"] = drawArenaSetting,
-        ["p4"]          = drawDisableBlizzSetting,
-    }
-
-    selectedTreePanel = groupPath
- 
-    if drawPanelSwitch[groupPath] then
-        widget:ReleaseChildren()
-        drawPanelSwitch[groupPath](widget)
-        widget:DoLayout()
-    end
-
-end)
-
-
-
-
-
-
-frame:SetCallback("OnClose", function(widget)
-    if(G_MyAddon.SavedVars.General.ShowGrid == true) then
-        -- when closing the Option window, hide the grid
-        ChangeGridVisibility(false)
-    end
-end)
-
 -- Addon commands registration
 SLASH_MYADDON1 = "/myaddon"
 SLASH_MYADDON2 = "/x"
@@ -541,11 +463,11 @@ SlashCmdList["MYADDON"] = function(msg)
          for k, v in pairs(G_MyAddon.Frames.TargetOfTargetFrame.mainFrame) do print("key:", k, "value:", v) end
 
     else
-        if frame:IsShown() then
-            frame:Hide()
+        if G_MyAddon.Options.mainFrame:IsShown() then
+            G_MyAddon.Options.mainFrame:Hide()
         else
             if(PlayerIsInCombat() == false) then
-                frame:Show()
+                G_MyAddon.Options.mainFrame:Show()
                 if(G_MyAddon.SavedVars.General.ShowGrid == true) then
                     -- if the Show Grid option is true, show grid on Option Window open
                     ChangeGridVisibility(true)
@@ -555,11 +477,85 @@ SlashCmdList["MYADDON"] = function(msg)
     end
 end
 
--- Adding frame into special frame table to make it closeable by Escape button
-_G["OptionFrame"] = frame.frame
-tinsert(UISpecialFrames, "OptionFrame")
+
 -------------------------------------------------------------------------------------------
 
+local function initOptionWindow ()
+
+    -- Main Option Window
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle("Addon Name") -- TODO think about better name of addon
+    frame:SetLayout("Fill")
+    frame:SetWidth(600)
+    frame:SetHeight(600)
+
+    -- Block all resizing scripts
+    frame.sizer_se:SetScript("OnMouseDown",nil)
+    frame.sizer_e:SetScript("OnMouseDown",nil)
+    frame.sizer_s:SetScript("OnMouseDown",nil)
+
+    -- TreeGroup (left side of options)
+    local tree = AceGUI:Create("TreeGroup")
+    tree:SetTree(treeData)
+    tree:SetFullWidth(true)
+    tree:SetFullHeight(true)
+
+    frame:AddChild(tree)
+    -- Default option selected for TreeGroup
+    frame:DoLayout()
+    C_Timer.After(0.05, function()
+    tree:SelectByPath("p1")
+    end)
+
+    tree:SetCallback("OnGroupSelected", function(widget, event, groupPath)
+        widget:ReleaseChildren()
+        widget:SetLayout("Fill")
+
+        if(groupPath == "p3")then
+            widget:SelectByPath("p3", "p3_1")
+            return
+        end
+
+
+        local drawPanelSwitch = {
+            ["p1"]          = drawGeneralSetting,
+            ["p2"]          = drawEnableFrames,
+            ["p3\001p3_1"]  = drawPlayerSetting,
+            ["p3\001p3_2"]  = drawPetSetting,
+            ["p3\001p3_3"]  = drawTargetSetting,
+            ["p3\001p3_4"]  = drawToTSetting,
+            ["p3\001p3_5"]  = drawFocusSetting,
+            ["p3\001p3_6"]  = drawFocusTargetSetting,
+            ["p3\001p3_7"]  = drawPartySetting,
+            ["p3\001p3_8"]  = drawRaidSetting,
+            ["p3\001p3_9"]  = drawBossSetting,
+            ["p3\001p3_10"] = drawArenaSetting,
+            ["p4"]          = drawDisableBlizzSetting,
+        }
+
+        selectedTreePanel = groupPath
+    
+        if drawPanelSwitch[groupPath] then
+            widget:ReleaseChildren()
+            drawPanelSwitch[groupPath](widget)
+            widget:DoLayout()
+        end
+
+    end)
+    
+    frame:SetCallback("OnClose", function(widget)
+        if(G_MyAddon.SavedVars.General.ShowGrid == true) then
+            -- when closing the Option window, hide the grid
+            ChangeGridVisibility(false)
+        end
+    end)
+
+    -- Adding frame into special frame table to make it closeable by Escape button
+    _G["OptionFrame"] = frame.frame
+    tinsert(UISpecialFrames, "OptionFrame")
+
+    G_MyAddon.Options.mainFrame = frame
+end
 
 
 
@@ -573,6 +569,7 @@ G_MyAddon.Frames.FocusFrame = {}
 G_MyAddon.Frames.PetFrame = {}
 
 G_MyAddon.SavedVars = {}
+G_MyAddon.Options = {}
 
 
 
@@ -583,7 +580,7 @@ local function initFunction(self, event, addonName)
         print("I got here because of " .. event .. " of " .. addonName)
 
         InitializeDefaults(savedVar, nil)
-
+        initOptionWindow()
         G_MyAddon.SavedVars = savedVar
         G_MyAddon.Frames.PlayerFrame.mainFrame = Frame:New(savedVar.PlayerFrame, "player")
         G_MyAddon.Frames.TargetFrame.mainFrame = Frame:New(savedVar.TargetFrame, "target")
@@ -605,8 +602,8 @@ local function initFunction(self, event, addonName)
         end
 
     elseif (event == "PLAYER_REGEN_DISABLED") then
-        if frame:IsShown() then
-            frame:Hide()
+        if G_MyAddon.Options.mainFrame:IsShown() then
+            G_MyAddon.Options.mainFrame:Hide()
         end
     end
 
