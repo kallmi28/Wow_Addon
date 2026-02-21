@@ -8,9 +8,10 @@
 #@no-lib-strip@
 libs\AceGUI-3.0\AceGUI-3.0.xml
 
-
-MyAddon.lua
+customText.lua
 stringManip.lua
+MyAddon.lua
+
 grid.lua
 frame.lua
 defaults.lua

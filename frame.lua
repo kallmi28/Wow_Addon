@@ -194,8 +194,8 @@ local function updateHealthBar(frame, unit, bar)
     frame:SetMinMaxValues(0, maxHP)
     frame:SetValue(currHP)
 
-    frame.LeftText:SetText(FormatUserString(bar.LeftText, unit))
-    frame.RightText:SetText(FormatUserString(bar.RightText, unit))
+    frame.LeftText:UpdateText()
+    frame.RightText:UpdateText()
 end
 
 -- change color of power bar according to actual power of unit 
@@ -304,8 +304,9 @@ function Frame:UpdatePowerBar(frame, event, unit, bar)
     local maxPow = UnitPowerMax(unit, powerType)
     frame:SetMinMaxValues(0, maxPow)
     frame:SetValue(currPow)
-    frame.LeftText:SetText(FormatUserString(bar.LeftText, unit))
-    frame.RightText:SetText(FormatUserString(bar.RightText, unit))
+
+    frame.LeftText:UpdateText()
+    frame.RightText:UpdateText()
 
 end
 
@@ -480,9 +481,10 @@ function Frame:New(initVal, unitTypeID)
         instance.BarArr[i].Height = barInfo.Height
         instance.BarArr[i].BarFrame:SetStatusBarColor(0,0,0,0)
         instance.BarArr[i].BarType = barInfo.BarType
+--[[
         instance.BarArr[i].LeftText = barInfo.LeftText
         instance.BarArr[i].RightText = barInfo.RightText
-
+ ]]
         -- add border to bar
         addBorder(instance.BarArr[i].BarFrame, 1)
 
@@ -505,13 +507,41 @@ function Frame:New(initVal, unitTypeID)
             instance.BarArr[i].BarFrame:Hide()
         end
 
+        -- TODO use customText instead
         -- create "labels" on bars
-        instance.BarArr[i].BarFrame.LeftText = instance.BarArr[i].BarFrame:CreateFontString(unitTypeID .. barInfo.BarType .. "Left", "OVERLAY", "GameFontNormal")
+        -- instance.BarArr[i].BarFrame.LeftText = instance.BarArr[i].BarFrame:CreateFontString(unitTypeID .. barInfo.BarType .. "Left", "OVERLAY", "GameFontNormal")
+        -- instance.BarArr[i].BarFrame.LeftText:SetPoint("LEFT",instance.BarArr[i].BarFrame,"LEFT", 3,0)
+        -- instance.BarArr[i].BarFrame.RightText = instance.BarArr[i].BarFrame:CreateFontString(unitTypeID .. barInfo.BarType .. "Right", "OVERLAY", "GameFontNormal")
+        -- instance.BarArr[i].BarFrame.RightText:SetPoint("RIGHT",instance.BarArr[i].BarFrame,"RIGHT", -3,0)
+
+
+
+        instance.BarArr[i].BarFrame.LeftText = CustomText:New(
+            instance.BarArr[i].BarFrame,
+            G_MyAddon.SavedVars.Fonts,      -- fontPath
+            G_MyAddon.SavedVars.FontSize,   -- fontSize
+            "OUTLINE",                      -- fontFlags
+            {r = 1, g = 1, b = 1, a = 1},   -- fontColor
+            barInfo.LeftText,               -- templateText
+            "OVERLAY",                      -- layer
+            instance.UnitFrameID            -- unit
+            )
+
+        instance.BarArr[i].BarFrame.RightText = CustomText:New(
+            instance.BarArr[i].BarFrame,
+            G_MyAddon.SavedVars.Fonts,      -- fontPath
+            G_MyAddon.SavedVars.FontSize,  -- fontSize
+            "OUTLINE",                      -- fontFlags
+            {r = 1, g = 1, b = 1, a = 1},   -- fontColor
+            barInfo.RightText,               -- templateText
+            "OVERLAY",                      -- layer
+            instance.UnitFrameID            -- unit
+            )
+
         instance.BarArr[i].BarFrame.LeftText:SetPoint("LEFT",instance.BarArr[i].BarFrame,"LEFT", 3,0)
-        instance.BarArr[i].BarFrame.RightText = instance.BarArr[i].BarFrame:CreateFontString(unitTypeID .. barInfo.BarType .. "Right", "OVERLAY", "GameFontNormal")
         instance.BarArr[i].BarFrame.RightText:SetPoint("RIGHT",instance.BarArr[i].BarFrame,"RIGHT", -3,0)
 
-        -- set max width, max height, turn off word wrap for text to not overflow the bar
+        -- -- set max width, max height, turn off word wrap for text to not overflow the bar
         instance.BarArr[i].BarFrame.LeftText:SetWordWrap(false) 
         instance.BarArr[i].BarFrame.LeftText:SetJustifyH("LEFT")
         instance.BarArr[i].BarFrame.LeftText:SetWidth(instance.Width/2)
@@ -521,7 +551,6 @@ function Frame:New(initVal, unitTypeID)
         instance.BarArr[i].BarFrame.RightText:SetJustifyH("RIGHT")
         instance.BarArr[i].BarFrame.RightText:SetWidth(instance.Width/2)
         instance.BarArr[i].BarFrame.RightText:SetMaxLines(1)
-
 
         -- initialize bar according to type
         if(instance.BarArr[i].BarType == "HB")then
@@ -556,8 +585,9 @@ function Frame:ApplySettings()
     for i = 1, self.BarsPerFrame, 1 do
         h = h + self.BarArr[i].Height
         self.BarArr[i].BarFrame:SetSize(self.Width, self.BarArr[i].Height)
-        self.BarArr[i].BarFrame.LeftText:SetWidth(self.Width/2)
-        self.BarArr[i].BarFrame.RightText:SetWidth(self.Width/2)
+        --TODO use customText instead
+        -- self.BarArr[i].BarFrame.LeftText:SetWidth(self.Width/2)
+        -- self.BarArr[i].BarFrame.RightText:SetWidth(self.Width/2)
 
     end
     self.Height = h
@@ -588,7 +618,8 @@ function Frame:Save(storage)
 
         storageBarInfo.Height = selfBarInfo.Height
         storageBarInfo.BarType = selfBarInfo.BarType
-        storageBarInfo.LeftText = selfBarInfo.LeftText
-        storageBarInfo.RightText = selfBarInfo.RightText
+        --TODO update when customText is in use
+        -- storageBarInfo.LeftText = selfBarInfo.LeftText
+        -- storageBarInfo.RightText = selfBarInfo.RightText
     end
 end

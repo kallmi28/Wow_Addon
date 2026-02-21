@@ -634,3 +634,4 @@ classColors = {
     ["DEMONHUNTER"] = {r = 0.64, g = 0.19, b = 0.79},
     ["EVOKER"] = {r = 0.20, g = 0.58, b = 0.50},
 }
+

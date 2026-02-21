@@ -28,7 +28,8 @@ function getMaxHpSmart (unit)
 end
 
 function getPercHp (unit)
-    return  UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)
+    return string.format("%.1f", UnitPowerPercent(unit, UnitPowerType(unit), true, CurveConstants.ScaleTo100))
+
 end
 
 function getMissingHp (unit)
@@ -60,7 +61,7 @@ function getMaxPowerSmart (unit)
 end
 
 function getPercPower (unit)
-    return string.format("%.1f", UnitPowerPercent(unit, UnitPowerType(unit), true, CurveConstants.ScaleTo100))
+    return string.format("%.1f", UnitHealthPercent(unit, true, CurveConstants.ScaleTo100))
 end
 
 function getMissingPower (unit)
@@ -103,6 +104,6 @@ end
 
 function getStatusAfk (unit)
     -- TODO think about solution which stores last known value before combat
-    --print(GetServerTime(), "AFK checking")
-    return PlayerIsInCombat() and "" or (UnitIsAFK(unit) and "(AFK)" or (UnitIsDND(unit) and "(DND)" or ""))
+    -- return PlayerIsInCombat() and "" or (UnitIsAFK(unit) and "(AFK)" or (UnitIsDND(unit) and "(DND)" or ""))
+    return ""
 end

@@ -9,7 +9,7 @@
     * [x] define default data for focus frame
     * [x] define default data for pet frame
     * [x] define default data for target of target frame
-    * [x] define default data for focus target frame
+    * [ ] define default data for focus target frame
     * [ ] define default data for party frame
     * [ ] define default data for raid frame
     * [ ] define default data for boss frame
@@ -20,3 +20,6 @@
 * [ ] implement fonts (+size)
 * [ ] implement frame transparency (in combat/outside combat/in sanctuary/...)
 * [ ] implement buff/debuff frame
+* [ ] fix AFK/DND indication
+* [ ] create separate file (class) for option window
+* [ ] implement Blizz unit frame disabling/enabling 
