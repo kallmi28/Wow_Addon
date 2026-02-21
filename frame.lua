@@ -16,69 +16,137 @@ local anchorFrameTranslation = {
     -- ["SCREEN"] = UIParent,
 }
 
--- Function to substitute user formated string with actual values
-local function FormatUserString(userString, unit)
-    local mask = userString
-    if not UnitExists(unit) then return "" end
+local function updateSecondaryBar(frame, unit)
+    local _, playerClass = UnitClass("player")
 
-local keywords = {
-    "CurrHP",
-    "CurrHPSmart",
-    "MaxHP",
-    "MaxHPSmart",
-    "PercHP",
-    "MissingHP",
-    "MissingHPSmart",
-    "CurrPower",
-    "CurrPowerSmart",
-    "MaxPower",
-    "MaxPowerSmart",
-    "PercPower",
-    "MissingPower",
-    "MissingPowerSmart",
-    "UnitName",
-    "UnitServer",
-    "GuildName",
-    "GroupNumber",
-    "Class",
-    "Level",
-    "Race",
-    "StatusAfk",
-}
+    local ClassPowerLogic = {
+    ["DRUID"] = function()
+        local curr = UnitPower("player", Enum.PowerType.ComboPoints)
+        local max  = UnitPowerMax("player", Enum.PowerType.ComboPoints)
+        local color = PowerBarColor["COMBO_POINTS"]
+        color.a = 1
+        return curr, max, color, color
+    end,
+    ["PALADIN"] = function()
+        local curr = UnitPower("player", Enum.PowerType.HolyPower)
+        local max  = UnitPowerMax("player", Enum.PowerType.HolyPower)
+        local color = PowerBarColor["HOLY_POWER"]
+        color.a = 1
+        return curr, max, color, color
+    end,
+    ["ROGUE"] = function()
+        local curr = UnitPower("player", Enum.PowerType.ComboPoints)
+        local max  = UnitPowerMax("player", Enum.PowerType.ComboPoints)
+        local color = PowerBarColor["COMBO_POINTS"]
+        color.a = 1
+        return curr, max, color, color
+    end,
+    ["EVOKER"] = function()
+        -- Evoker's Essence color is not in power color table, gradient has been used
+        local curr = UnitPower("player", Enum.PowerType.Essence)
+        local max  = UnitPowerMax("player", Enum.PowerType.Essence)
+        return curr, max, CreateColor(198/256, 100/256, 202/256,1), CreateColor(74/256, 189/256, 207/256,1)
+    end,
+    ["WARLOCK"] = function()
+        local curr = UnitPower("player", Enum.PowerType.SoulShards)
+        local max  = UnitPowerMax("player", Enum.PowerType.SoulShards)
+        local color = PowerBarColor["SOUL_SHARDS"]
+        color.a = 1
+        return curr, max, color, color
+    end,
+    ["MONK"] = function()
+        local curr = UnitPower("player", Enum.PowerType.Chi)
+        local max  = UnitPowerMax("player", Enum.PowerType.Chi)
+        local color = PowerBarColor["CHI"]
+        color.a = 1
+        return curr, max, color, color
+    end,
+    ["MAGE"] = function()
+        local curr = UnitPower("player", Enum.PowerType.ArcaneCharges)
+        local max  = UnitPowerMax("player", Enum.PowerType.ArcaneCharges)
+        local color = PowerBarColor["ARCANE_CHARGES"]
+        color.a = 1
+        return curr, max, color, color
+    end,
+    ["DEATHKNIGHT"] = function()
+       -- TODO finish implementation for DK
+       -- RUNE_POWER_UPDATE event needs to be registered
+        local ready = 0
+        for i = 1, 6 do
+            local _, _, runeReady = GetRuneCooldown(i)
+            if runeReady then ready = ready + 1 end
+        end
+        return ready, 6,CreateColor(128/256, 128/256, 128/256,1), CreateColor(128/256, 128/256, 128/256,1)
+    end,
+    }
 
-local subFunctions = {
-    function() return getCurrHp(unit) end,
-    function() return getCurrHpSmart(unit) end,
-    function() return getMaxHp(unit) end,
-    function() return getMaxHpSmart(unit) end,
-    function() return getPercHp(unit) end,
-    function() return getMissingHp(unit) end,
-    function() return getMissingHpSmart(unit) end,
-    function() return getCurrPower(unit) end,
-    function() return getCurrPowerSmart(unit) end,
-    function() return getMaxPower(unit) end,
-    function() return getMaxPowerSmart(unit) end,
-    function() return getPercPower(unit) end,
-    function() return getMissingPower(unit) end,
-    function() return getMissingPowerSmart(unit) end,
-    function() return getUnitName(unit) end,
-    function() return getUnitServer(unit) end,
-    function() return getGuildName(unit) end,
-    function() return getGroupNumber(unit) end,
-    function() return getClass(unit) end,
-    function() return getLevel(unit) end,
-    function() return getRace(unit) end,
-    function() return getStatusAfk(unit) end,
-}
+    local classPowerLogicHandler = ClassPowerLogic[playerClass]
+    if classPowerLogicHandler == nil then return end
 
-for index, value in ipairs(keywords) do
-    mask = string.gsub(mask, "%[" .. value .. "%]", "%%" .. index .. "$s")
-    -- print(index, mask)
+    local currResources, maxResources, colorMin, colorMax = classPowerLogicHandler()
+
+    local barHeight = frame:GetHeight()
+    if currResources > 0 then
+        frame.PrimaryPowerBar:SetHeight((2* barHeight) / 3)
+        frame.SecondaryPowerBar:SetHeight(barHeight/3)
+        frame.SecondaryPowerBar:SetMinMaxValues(0, maxResources)
+        frame.SecondaryPowerBar:SetValue(currResources)
+
+        local barTexture = frame.SecondaryPowerBar:GetStatusBarTexture()
+        barTexture:SetGradient("HORIZONTAL", colorMin, colorMax)
+
+        frame.SecondaryPowerBar.LeftText:SetTemplateText(string.format("%d/%d", currResources, maxResources))
+        frame.SecondaryPowerBar.RightText:SetTemplateText("")
+    else
+        frame.PrimaryPowerBar:SetHeight(barHeight)
+        frame.SecondaryPowerBar:SetHeight(0)
+        frame.SecondaryPowerBar:SetMinMaxValues(0, maxResources)
+        frame.SecondaryPowerBar:SetValue(currResources)
+        frame.SecondaryPowerBar.LeftText:SetTemplateText("")
+        frame.SecondaryPowerBar.RightText:SetTemplateText("")
+    end
+    frame.SecondaryPowerBar.LeftText:UpdateText()
+    frame.SecondaryPowerBar.RightText:UpdateText()
+
 end
-    
-    mask = string.format(mask, callAndExpand (subFunctions))
-    -- print (mask)
-    return mask
+
+local function prepareBarFontStrings(instance, bar, barInfo)
+        bar.LeftText = CustomText:New(
+            bar,
+            G_MyAddon.SavedVars.Fonts,      -- fontPath
+            G_MyAddon.SavedVars.FontSize,   -- fontSize
+            "OUTLINE",                      -- fontFlags
+            {r = 1, g = 1, b = 1, a = 1},   -- fontColor
+            barInfo.LeftText,               -- templateText
+            "OVERLAY",                      -- layer
+            instance.UnitFrameID            -- unit
+            )
+
+        bar.RightText = CustomText:New(
+            bar,
+            G_MyAddon.SavedVars.Fonts,      -- fontPath
+            G_MyAddon.SavedVars.FontSize,  -- fontSize
+            "OUTLINE",                      -- fontFlags
+            {r = 1, g = 1, b = 1, a = 1},   -- fontColor
+            barInfo.RightText,               -- templateText
+            "OVERLAY",                      -- layer
+            instance.UnitFrameID            -- unit
+            )
+
+
+        bar.LeftText:SetPoint("LEFT",bar,"LEFT", 3,0)
+        bar.RightText:SetPoint("RIGHT",bar,"RIGHT", -3,0)
+
+        -- -- set max width, max height, turn off word wrap for text to not overflow the bar
+        bar.LeftText:SetWordWrap(false) 
+        bar.LeftText:SetJustifyH("LEFT")
+        bar.LeftText:SetWidth(instance.Width/2)
+        bar.LeftText:SetMaxLines(1)
+
+        bar.RightText:SetWordWrap(false) 
+        bar.RightText:SetJustifyH("RIGHT")
+        bar.RightText:SetWidth(instance.Width/2)
+        bar.RightText:SetMaxLines(1)
 end
 
 -- Function for adding border to bar frame
@@ -148,11 +216,10 @@ local function setupMainFrame (instance, height)
 end
 
 -- creates Bar, sets width, height and texture
-local function createBar(barInfo, width, idx, parent)
+local function createBar(height, width, idx, parent)
     local bar = CreateFrame("StatusBar", "Bar" .. idx, parent)
     
-    bar:SetSize(width, barInfo.Height)
-
+    bar:SetSize(width, height)
     bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 
     return bar
@@ -205,10 +272,6 @@ local function changePowerBarColor(frame, unit)
     -- get color of normal power
     local barColor = GetPowerBarColor(powerToken)
 
-    -- if (unit ~= "targettarget") then
-    --     print(c, powerToken, r, g, b)
-    --    -- for k, v in pairs(barColor.predictionColor) do print("klíč:", k, "hodnota:", v) end
-    -- end
 
     -- if GetPowerBarColor did not return color, unit power is special, use color components from UnitPowerType
     if barColor == nil then
@@ -269,7 +332,7 @@ function Frame:UpdatePowerBar(frame, event, unit, bar)
         -- set unit to focus and update power bar color
         unit = "focus"
         if(UnitExists("focus")) then
-            changePowerBarColor(frame, "focus")
+            changePowerBarColor(frame.PrimaryPowerBar, "focus")
         end
     end
     -- if event is polling from target of target frame
@@ -278,7 +341,7 @@ function Frame:UpdatePowerBar(frame, event, unit, bar)
     if (event == "POLLING" or event == "UNIT_TARGET" or (event == "PLAYER_TARGET_CHANGED" and unit == "targettarget")) then
         -- check unit and change power color
         if(UnitExists(unit)) then
-            changePowerBarColor(frame, unit)
+            changePowerBarColor(frame.PrimaryPowerBar, unit)
         end
     -- if player logged into game
     -- or player power changed (shapeshift, talent change, ...)
@@ -295,18 +358,22 @@ function Frame:UpdatePowerBar(frame, event, unit, bar)
         end
         -- check unit and change color of power bar
         if(UnitExists(unit)) then
-            changePowerBarColor(frame, unit)
+            changePowerBarColor(frame.PrimaryPowerBar, unit)
         end
     end
     -- update text on bars
     local powerType = UnitPowerType(unit)
     local currPow = UnitPower(unit, powerType)
     local maxPow = UnitPowerMax(unit, powerType)
-    frame:SetMinMaxValues(0, maxPow)
-    frame:SetValue(currPow)
+    frame.PrimaryPowerBar:SetMinMaxValues(0, maxPow)
+    frame.PrimaryPowerBar:SetValue(currPow)
 
-    frame.LeftText:UpdateText()
-    frame.RightText:UpdateText()
+    frame.PrimaryPowerBar.LeftText:UpdateText()
+    frame.PrimaryPowerBar.RightText:UpdateText()
+
+    if(unit == "player") then
+        updateSecondaryBar(frame, unit)
+    end
 
 end
 
@@ -477,14 +544,45 @@ function Frame:New(initVal, unitTypeID)
 
         -- bar creation + data load
         instance.BarArr[i] = {}
-        instance.BarArr[i].BarFrame = createBar(barInfo, instance.Width, i, instance.MainFrame)
         instance.BarArr[i].Height = barInfo.Height
-        instance.BarArr[i].BarFrame:SetStatusBarColor(0,0,0,0)
         instance.BarArr[i].BarType = barInfo.BarType
---[[
-        instance.BarArr[i].LeftText = barInfo.LeftText
-        instance.BarArr[i].RightText = barInfo.RightText
- ]]
+
+        instance.BarArr[i].BarFrame = createBar(barInfo.Height, instance.Width, i, instance.MainFrame)
+        instance.BarArr[i].BarFrame:SetStatusBarColor(0,0,0,0)
+
+        -- initialize bar according to type
+        if(instance.BarArr[i].BarType == "HB")then
+            initializeBar(instance, instance.BarArr[i], unitTypeID)
+            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
+
+        elseif (instance.BarArr[i].BarType == "PB") then
+            -- TODO add logic for secondary power
+            -- register events for bar, set scripts for bar
+            initializeBar(instance, instance.BarArr[i], unitTypeID)
+
+            
+            instance.BarArr[i].BarFrame.PrimaryPowerBar = createBar(barInfo.Height, instance.Width, i .. "Primary", instance.BarArr[i].BarFrame)
+            instance.BarArr[i].BarFrame.SecondaryPowerBar = createBar(0, instance.Width, i .. "Secondary", instance.BarArr[i].BarFrame)
+
+            instance.BarArr[i].BarFrame.PrimaryPowerBar:SetStatusBarColor(1,0.5,1,1)
+            instance.BarArr[i].BarFrame.SecondaryPowerBar:SetStatusBarColor(0,0.5,1,1)
+            instance.BarArr[i].BarFrame.PrimaryPowerBar:SetPoint("TOPLEFT",instance.BarArr[i].BarFrame, "TOPLEFT")
+            instance.BarArr[i].BarFrame.PrimaryPowerBar:SetPoint("TOPRIGHT", instance.BarArr[i].BarFrame, "TOPRIGHT")
+
+            instance.BarArr[i].BarFrame.SecondaryPowerBar:SetPoint("TOPLEFT",instance.BarArr[i].BarFrame.PrimaryPowerBar, "BOTTOMLEFT")
+            instance.BarArr[i].BarFrame.SecondaryPowerBar:SetPoint("TOPRIGHT", instance.BarArr[i].BarFrame.PrimaryPowerBar, "BOTTOMRIGHT")
+
+            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame.PrimaryPowerBar, barInfo)
+            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame.SecondaryPowerBar, barInfo)
+
+
+            -- prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
+        elseif (instance.BarArr[i].BarType == "CB") then
+            initializeBar(instance, instance.BarArr[i], unitTypeID)
+            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
+
+        end
+
         -- add border to bar
         addBorder(instance.BarArr[i].BarFrame, 1)
 
@@ -507,63 +605,6 @@ function Frame:New(initVal, unitTypeID)
             instance.BarArr[i].BarFrame:Hide()
         end
 
-        -- TODO use customText instead
-        -- create "labels" on bars
-        -- instance.BarArr[i].BarFrame.LeftText = instance.BarArr[i].BarFrame:CreateFontString(unitTypeID .. barInfo.BarType .. "Left", "OVERLAY", "GameFontNormal")
-        -- instance.BarArr[i].BarFrame.LeftText:SetPoint("LEFT",instance.BarArr[i].BarFrame,"LEFT", 3,0)
-        -- instance.BarArr[i].BarFrame.RightText = instance.BarArr[i].BarFrame:CreateFontString(unitTypeID .. barInfo.BarType .. "Right", "OVERLAY", "GameFontNormal")
-        -- instance.BarArr[i].BarFrame.RightText:SetPoint("RIGHT",instance.BarArr[i].BarFrame,"RIGHT", -3,0)
-
-
-
-        instance.BarArr[i].BarFrame.LeftText = CustomText:New(
-            instance.BarArr[i].BarFrame,
-            G_MyAddon.SavedVars.Fonts,      -- fontPath
-            G_MyAddon.SavedVars.FontSize,   -- fontSize
-            "OUTLINE",                      -- fontFlags
-            {r = 1, g = 1, b = 1, a = 1},   -- fontColor
-            barInfo.LeftText,               -- templateText
-            "OVERLAY",                      -- layer
-            instance.UnitFrameID            -- unit
-            )
-
-        instance.BarArr[i].BarFrame.RightText = CustomText:New(
-            instance.BarArr[i].BarFrame,
-            G_MyAddon.SavedVars.Fonts,      -- fontPath
-            G_MyAddon.SavedVars.FontSize,  -- fontSize
-            "OUTLINE",                      -- fontFlags
-            {r = 1, g = 1, b = 1, a = 1},   -- fontColor
-            barInfo.RightText,               -- templateText
-            "OVERLAY",                      -- layer
-            instance.UnitFrameID            -- unit
-            )
-
-        instance.BarArr[i].BarFrame.LeftText:SetPoint("LEFT",instance.BarArr[i].BarFrame,"LEFT", 3,0)
-        instance.BarArr[i].BarFrame.RightText:SetPoint("RIGHT",instance.BarArr[i].BarFrame,"RIGHT", -3,0)
-
-        -- -- set max width, max height, turn off word wrap for text to not overflow the bar
-        instance.BarArr[i].BarFrame.LeftText:SetWordWrap(false) 
-        instance.BarArr[i].BarFrame.LeftText:SetJustifyH("LEFT")
-        instance.BarArr[i].BarFrame.LeftText:SetWidth(instance.Width/2)
-        instance.BarArr[i].BarFrame.LeftText:SetMaxLines(1)
-
-        instance.BarArr[i].BarFrame.RightText:SetWordWrap(false) 
-        instance.BarArr[i].BarFrame.RightText:SetJustifyH("RIGHT")
-        instance.BarArr[i].BarFrame.RightText:SetWidth(instance.Width/2)
-        instance.BarArr[i].BarFrame.RightText:SetMaxLines(1)
-
-        -- initialize bar according to type
-        if(instance.BarArr[i].BarType == "HB")then
-            initializeBar(instance, instance.BarArr[i], unitTypeID)
-
-        elseif (instance.BarArr[i].BarType == "PB") then
-            -- TODO add logic for secondary power
-            -- register events for bar, set scripts for bar
-            initializeBar(instance, instance.BarArr[i], unitTypeID)
-
-        elseif (instance.BarArr[i].BarType == "CB") then
-            initializeBar(instance, instance.BarArr[i], unitTypeID)
-        end
     end
 
     -- setup events, callbacks and properties of main frame
@@ -572,6 +613,8 @@ function Frame:New(initVal, unitTypeID)
 
     return instance
 end
+
+
 
 -- Function called during changes in Options
 function Frame:ApplySettings()

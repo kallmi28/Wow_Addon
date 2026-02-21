@@ -28,7 +28,7 @@ function getMaxHpSmart (unit)
 end
 
 function getPercHp (unit)
-    return string.format("%.1f", UnitPowerPercent(unit, UnitPowerType(unit), true, CurveConstants.ScaleTo100))
+    return string.format("%.1f", UnitHealthPercent(unit, true, CurveConstants.ScaleTo100))
 
 end
 
@@ -61,7 +61,7 @@ function getMaxPowerSmart (unit)
 end
 
 function getPercPower (unit)
-    return string.format("%.1f", UnitHealthPercent(unit, true, CurveConstants.ScaleTo100))
+    return string.format("%.1f", UnitPowerPercent(unit, UnitPowerType(unit), true, CurveConstants.ScaleTo100))
 end
 
 function getMissingPower (unit)

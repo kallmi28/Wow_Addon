@@ -136,6 +136,10 @@ function CustomText:ApplyAllSettings()
     self:UpdateText()
 end
 
+function CustomText:GetTemplateText()
+    return self.templateText
+end
+
 -- Proxy methods for positioning (makes it behave like a frame)
 function CustomText:SetPoint(...)
     self.fontString:SetPoint(...)

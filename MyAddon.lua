@@ -532,8 +532,6 @@ local function initOptionWindow ()
             ["p3\001p3_10"] = drawArenaSetting,
             ["p4"]          = drawDisableBlizzSetting,
         }
-
-        selectedTreePanel = groupPath
     
         if drawPanelSwitch[groupPath] then
             widget:ReleaseChildren()
@@ -634,4 +632,3 @@ classColors = {
     ["DEMONHUNTER"] = {r = 0.64, g = 0.19, b = 0.79},
     ["EVOKER"] = {r = 0.20, g = 0.58, b = 0.50},
 }
-
