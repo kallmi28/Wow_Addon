@@ -10,8 +10,9 @@ libs\AceGUI-3.0\AceGUI-3.0.xml
 
 customText.lua
 stringManip.lua
+unitCellFrame.lua
 MyAddon.lua
 
 grid.lua
-frame.lua
+unitFrame.lua
 defaults.lua

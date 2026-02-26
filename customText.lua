@@ -129,7 +129,7 @@ function CustomText:UpdateText()
     self.fontString:SetText(FormatUserString(self.templateText, self.unit))
 end
 
--- Safely apply font settings
+-- apply font settings
 function CustomText:ApplyAllSettings()
     self:UpdateFont()
     self:UpdateColor()

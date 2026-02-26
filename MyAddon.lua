@@ -552,7 +552,7 @@ local function initOptionWindow ()
     _G["OptionFrame"] = frame.frame
     tinsert(UISpecialFrames, "OptionFrame")
 
-    G_MyAddon.Options.mainFrame = frame
+    return frame
 end
 
 
@@ -578,13 +578,13 @@ local function initFunction(self, event, addonName)
         print("I got here because of " .. event .. " of " .. addonName)
 
         InitializeDefaults(savedVar, nil)
-        initOptionWindow()
+        G_MyAddon.Options.mainFrame = initOptionWindow()
         G_MyAddon.SavedVars = savedVar
-        G_MyAddon.Frames.PlayerFrame.mainFrame = Frame:New(savedVar.PlayerFrame, "player")
-        G_MyAddon.Frames.TargetFrame.mainFrame = Frame:New(savedVar.TargetFrame, "target")
-        G_MyAddon.Frames.TargetOfTargetFrame.mainFrame = Frame:New(savedVar.TargetOfTargetFrame, "targettarget")
-        G_MyAddon.Frames.FocusFrame.mainFrame = Frame:New(savedVar.FocusFrame, "focus")
-        G_MyAddon.Frames.PetFrame.mainFrame = Frame:New(savedVar.PetFrame, "pet")
+        G_MyAddon.Frames.PlayerFrame.mainFrame = UnitFrame:New(savedVar.PlayerFrame, "player")
+        G_MyAddon.Frames.TargetFrame.mainFrame = UnitFrame:New(savedVar.TargetFrame, "target")
+        G_MyAddon.Frames.TargetOfTargetFrame.mainFrame = UnitFrame:New(savedVar.TargetOfTargetFrame, "targettarget")
+        G_MyAddon.Frames.FocusFrame.mainFrame = UnitFrame:New(savedVar.FocusFrame, "focus")
+        G_MyAddon.Frames.PetFrame.mainFrame = UnitFrame:New(savedVar.PetFrame, "pet")
 
     elseif(event == "PLAYER_LOGOUT") then
         print("I will never see this, but config has been saved succesfully")
@@ -632,3 +632,14 @@ classColors = {
     ["DEMONHUNTER"] = {r = 0.64, g = 0.19, b = 0.79},
     ["EVOKER"] = {r = 0.20, g = 0.58, b = 0.50},
 }
+
+-- -- Umožníme hýbání testovacím framem
+-- unitFrame:SetMovable(true)
+-- unitFrame:EnableMouse(true)
+-- unitFrame:RegisterForDrag("LeftButton")
+-- unitFrame:SetScript("OnDragStart", unitFrame.StartMoving)
+-- unitFrame:SetScript("OnDragStop", unitFrame.StopMovingOrSizing)
+
+
+-- local test = UnitCellFrame:New(100, 60, UIParent, "player")
+

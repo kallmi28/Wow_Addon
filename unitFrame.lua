@@ -1,8 +1,8 @@
 local x = 1
 
 
-Frame = {}
-Frame.__index = Frame
+UnitFrame = {}
+UnitFrame.__index = UnitFrame
 
 -- TODO create solution where adding sooner added frame as anchor does not break everything
 -- TODO create solution for dropdown to disallow anchoring to itself or create cycle
@@ -115,7 +115,7 @@ local function prepareBarFontStrings(instance, bar, barInfo)
             bar,
             G_MyAddon.SavedVars.Fonts,      -- fontPath
             G_MyAddon.SavedVars.FontSize,   -- fontSize
-            "OUTLINE",                      -- fontFlags
+            "SLUG",                      -- fontFlags
             {r = 1, g = 1, b = 1, a = 1},   -- fontColor
             barInfo.LeftText,               -- templateText
             "OVERLAY",                      -- layer
@@ -126,7 +126,7 @@ local function prepareBarFontStrings(instance, bar, barInfo)
             bar,
             G_MyAddon.SavedVars.Fonts,      -- fontPath
             G_MyAddon.SavedVars.FontSize,  -- fontSize
-            "OUTLINE",                      -- fontFlags
+            "SLUG",                      -- fontFlags
             {r = 1, g = 1, b = 1, a = 1},   -- fontColor
             barInfo.RightText,               -- templateText
             "OVERLAY",                      -- layer
@@ -197,9 +197,12 @@ local function setupMainFrame (instance, height)
     instance.MainFrame:SetWidth(instance.Width)
     instance.MainFrame:SetPoint(instance.AnchorByPoint,anchorFrame,instance.AnchorToPoint, instance.X, instance.Y)
     
+    -- registration of frames to behave as Blizzard unit frames 
     instance.MainFrame:SetAttribute("unit", instance.UnitFrameID)
-    instance.MainFrame:SetAttribute("*type1", "target")     -- Levé kliknutí cílí
-    instance.MainFrame:SetAttribute("*type2", "togglemenu") -- Pravé kliknutí otevře MENU
+    -- left click to target
+    instance.MainFrame:SetAttribute("*type1", "target")
+    -- right click to open menu
+    instance.MainFrame:SetAttribute("*type2", "togglemenu") 
     instance.MainFrame:RegisterForClicks("AnyUp")
 
     -- create background for the frame
@@ -284,7 +287,7 @@ end
 
 -- TODO check if Update functions for different bar types can be merged
 -- Depending on Event, choose what needs to be update on HP bar
-function Frame:UpdateHpBar(frame, event, unit, bar)
+function UnitFrame:UpdateHpBar(frame, event, unit, bar)
     -- if health of unit changes
     if (event == "UNIT_HEALTH") then
         updateHealthBar(frame, unit, bar)
@@ -326,7 +329,7 @@ end
 -- TODO check if update functions can be merged
 -- TODO if not, refactor this function
 -- depending on event, choose what needs to be updated on power bar
-function Frame:UpdatePowerBar(frame, event, unit, bar)
+function UnitFrame:UpdatePowerBar(frame, event, unit, bar)
     -- if player changes focus
     if(event == "PLAYER_FOCUS_CHANGED") then
         -- set unit to focus and update power bar color
@@ -379,7 +382,7 @@ end
 
 -- TODO add channeling functionality
 -- cast bar
-function Frame:castBarRun (frame, event, unitTarget)
+function UnitFrame:castBarRun (frame, event, unitTarget)
     --print("CastBar", event, unitTarget)
     if event == "UNIT_SPELLCAST_START" then
         frame:SetMinMaxValues(0, 1)
@@ -519,9 +522,9 @@ local function initializeBar(instance, bar, unitTypeID)
 end
 
 -- constructor for Frame instance
-function Frame:New(initVal, unitTypeID)
+function UnitFrame:New(initVal, unitTypeID)
 
-    local instance = setmetatable({}, Frame)
+    local instance = setmetatable({}, UnitFrame)
     local h = 0
     print("Constructor for Frame", unitTypeID)
     -- data load from saved variable
@@ -617,7 +620,7 @@ end
 
 
 -- Function called during changes in Options
-function Frame:ApplySettings()
+function UnitFrame:ApplySettings()
 
     --print("------------------------------------------------------")
     local h = 0
@@ -643,7 +646,7 @@ function Frame:ApplySettings()
 end
 
 -- Function for storing information about frames, called during logout
-function Frame:Save(storage)
+function UnitFrame:Save(storage)
     local storageBarInfo
     local selfBarInfo
 
