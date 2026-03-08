@@ -2,7 +2,7 @@ gridFrame = CreateFrame("Frame", "Grid", UIParent)
 
 local l = {}
 local flagUIResChanged = true
-function iterateAndChangeVisibility (self, isShow)
+local function iterateAndChangeVisibility (self, isShow)
     for _,v in pairs(l) do
         for _,v2 in pairs(v) do
             if(isShow == true) then

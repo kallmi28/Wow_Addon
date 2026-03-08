@@ -11,8 +11,9 @@ libs\AceGUI-3.0\AceGUI-3.0.xml
 customText.lua
 stringManip.lua
 unitCellFrame.lua
-MyAddon.lua
-
+optionFrame.lua
+unitPartyFrame.lua
 grid.lua
 unitFrame.lua
+MyAddon.lua
 defaults.lua

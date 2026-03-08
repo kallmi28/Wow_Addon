@@ -115,7 +115,7 @@ local function prepareBarFontStrings(instance, bar, barInfo)
             bar,
             G_MyAddon.SavedVars.Fonts,      -- fontPath
             G_MyAddon.SavedVars.FontSize,   -- fontSize
-            "SLUG",                      -- fontFlags
+            "SLUG, OUTLINE",                      -- fontFlags
             {r = 1, g = 1, b = 1, a = 1},   -- fontColor
             barInfo.LeftText,               -- templateText
             "OVERLAY",                      -- layer
@@ -126,7 +126,7 @@ local function prepareBarFontStrings(instance, bar, barInfo)
             bar,
             G_MyAddon.SavedVars.Fonts,      -- fontPath
             G_MyAddon.SavedVars.FontSize,  -- fontSize
-            "SLUG",                      -- fontFlags
+            "SLUG, OUTLINE",                      -- fontFlags
             {r = 1, g = 1, b = 1, a = 1},   -- fontColor
             barInfo.RightText,               -- templateText
             "OVERLAY",                      -- layer
@@ -147,6 +147,9 @@ local function prepareBarFontStrings(instance, bar, barInfo)
         bar.RightText:SetJustifyH("RIGHT")
         bar.RightText:SetWidth(instance.Width/2)
         bar.RightText:SetMaxLines(1)
+
+        bar.LeftText:UpdateText()
+        bar.RightText:UpdateText()
 end
 
 -- Function for adding border to bar frame
@@ -193,7 +196,7 @@ local function setupMainFrame (instance, height)
     local temp = anchorFrameTranslation[instance.AnchorToFrame]
     local anchorFrame = temp()
 
-    instance.MainFrame:SetFrameStrata("BACKGROUND")
+    instance.MainFrame:SetFrameStrata("LOW")
     instance.MainFrame:SetWidth(instance.Width)
     instance.MainFrame:SetPoint(instance.AnchorByPoint,anchorFrame,instance.AnchorToPoint, instance.X, instance.Y)
     
@@ -224,6 +227,13 @@ local function createBar(height, width, idx, parent)
     
     bar:SetSize(width, height)
     bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+
+    -- bar.tex = bar:CreateTexture(nil, "OVERLAY")
+    -- bar.tex:SetAtlas("Mission-widgetstatusbar-fill-white")
+    -- bar.tex:SetBlendMode("ADD")
+    -- bar.tex:SetDesaturated(true) -- Umožní ti barvit texturu pomocí SetVertexColor
+    -- bar.tex:SetAllPoints()
+
 
     return bar
 end
@@ -287,7 +297,7 @@ end
 
 -- TODO check if Update functions for different bar types can be merged
 -- Depending on Event, choose what needs to be update on HP bar
-function UnitFrame:UpdateHpBar(frame, event, unit, bar)
+function UnitFrame:UpdateHpBar(frame, event, unit, bar, ...)
     -- if health of unit changes
     if (event == "UNIT_HEALTH") then
         updateHealthBar(frame, unit, bar)
@@ -323,6 +333,14 @@ function UnitFrame:UpdateHpBar(frame, event, unit, bar)
         -- change color and text on bar
         changeHealthBarColor (frame, unit)
         updateHealthBar(frame, unit, bar)
+    end
+
+    if (event == "UNIT_PET" or event == "PET_UI_UPDATE") then
+        if(UnitExists("pet") == true) then
+            unit = "pet"
+            changeHealthBarColor (frame, unit)
+            updateHealthBar(frame, unit, bar)
+        end
     end
 end
 
@@ -363,6 +381,11 @@ function UnitFrame:UpdatePowerBar(frame, event, unit, bar)
         if(UnitExists(unit)) then
             changePowerBarColor(frame.PrimaryPowerBar, unit)
         end
+    elseif (event == "UNIT_PET" or event == "PET_UI_UPDATE") then
+        if(event == "PET_UI_UPDATE") then
+            unit = "pet"
+        end
+            changePowerBarColor(frame.PrimaryPowerBar, unit)
     end
     -- update text on bars
     local powerType = UnitPowerType(unit)
@@ -438,12 +461,15 @@ local function initializeBar(instance, bar, unitTypeID)
             -- for focus, change of players focus needs to be registered
             elseif(unitTypeID == "focus") then
                 frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+            elseif(unitTypeID == "pet") then
+                frame:RegisterEvent("UNIT_PET")
+                frame:RegisterEvent("PET_UI_UPDATE")
             end
         end
         --  setup callback for events
-        frame:SetScript("OnEvent", function (f, event, unitToken)
+        frame:SetScript("OnEvent", function (f, event, unitToken, ...)
             local realUnit = (unitTypeID == "targettarget") and "targettarget" or unitToken
-            instance:UpdateHpBar(f, event, realUnit, bar)
+            instance:UpdateHpBar(f, event, realUnit, bar, ...)
         end)
         -- change health bar color at bar creation
         changeHealthBarColor (frame, unitTypeID)
@@ -475,7 +501,7 @@ local function initializeBar(instance, bar, unitTypeID)
             end)
          else
             -- power value changed
-            frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unitTypeID)
+            frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", unitTypeID)
             -- player login
             frame:RegisterEvent("PLAYER_ENTERING_WORLD")
             -- unit power type changed
@@ -487,10 +513,13 @@ local function initializeBar(instance, bar, unitTypeID)
             -- for focus, change of player's focus needs to be registered
             elseif (unitTypeID == "focus") then
                 frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+            elseif(unitTypeID == "pet") then
+                frame:RegisterEvent("UNIT_PET")
+                frame:RegisterEvent("PET_UI_UPDATE")
             end
             -- setup callback for events
-            frame:SetScript("OnEvent", function (f, event, unitToken)
-                instance:UpdatePowerBar(f, event, unitToken, bar)
+            frame:SetScript("OnEvent", function (f, event, unitToken, ...)
+                instance:UpdatePowerBar(f, event, unitToken, bar, ...)
             end)
          end
 
@@ -510,6 +539,8 @@ local function initializeBar(instance, bar, unitTypeID)
             local p = UnitCastingDuration(unitTypeID)
             if(p ~= nil) then
                 f:SetValue(p:GetElapsedPercent())
+            else
+                f:Hide()
             end
         end)
         -- on event occuring, run callback
@@ -518,6 +549,29 @@ local function initializeBar(instance, bar, unitTypeID)
         end)
         -- hide frame at start
         frame:Hide()
+
+    elseif (barType == "EB") then
+        if(unitTypeID == "targettarget") then
+            -- target of target change event
+            frame:RegisterUnitEvent("UNIT_TARGET", "target")
+            -- when player changes target, its target changes too
+            frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+            frame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
+        end
+        frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        if (unitTypeID == "target") then
+            frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+            -- for focus, change of players focus needs to be registered
+        elseif(unitTypeID == "focus") then
+            frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+        elseif(unitTypeID == "pet") then
+            frame:RegisterEvent("UNIT_PET")
+            frame:RegisterEvent("PET_UI_UPDATE")
+        end
+        frame:SetScript("OnEvent", function (f, event, unitToken)
+            frame.LeftText:UpdatefText()
+            frame.RightText:UpdateText()
+        end)
     end
 end
 
@@ -584,6 +638,8 @@ function UnitFrame:New(initVal, unitTypeID)
             initializeBar(instance, instance.BarArr[i], unitTypeID)
             prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
 
+        elseif (instance.BarArr[i].BarType == "EB") then
+            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
         end
 
         -- add border to bar
