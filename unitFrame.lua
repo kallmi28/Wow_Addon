@@ -16,142 +16,6 @@ local anchorFrameTranslation = {
     -- ["SCREEN"] = UIParent,
 }
 
-local function updateSecondaryBar(frame, unit)
-    local _, playerClass = UnitClass("player")
-
-    local ClassPowerLogic = {
-    ["DRUID"] = function()
-        local curr = UnitPower("player", Enum.PowerType.ComboPoints)
-        local max  = UnitPowerMax("player", Enum.PowerType.ComboPoints)
-        local color = PowerBarColor["COMBO_POINTS"]
-        color.a = 1
-        return curr, max, color, color
-    end,
-    ["PALADIN"] = function()
-        local curr = UnitPower("player", Enum.PowerType.HolyPower)
-        local max  = UnitPowerMax("player", Enum.PowerType.HolyPower)
-        local color = PowerBarColor["HOLY_POWER"]
-        color.a = 1
-        return curr, max, color, color
-    end,
-    ["ROGUE"] = function()
-        local curr = UnitPower("player", Enum.PowerType.ComboPoints)
-        local max  = UnitPowerMax("player", Enum.PowerType.ComboPoints)
-        local color = PowerBarColor["COMBO_POINTS"]
-        color.a = 1
-        return curr, max, color, color
-    end,
-    ["EVOKER"] = function()
-        -- Evoker's Essence color is not in power color table, gradient has been used
-        local curr = UnitPower("player", Enum.PowerType.Essence)
-        local max  = UnitPowerMax("player", Enum.PowerType.Essence)
-        return curr, max, CreateColor(198/256, 100/256, 202/256,1), CreateColor(74/256, 189/256, 207/256,1)
-    end,
-    ["WARLOCK"] = function()
-        local curr = UnitPower("player", Enum.PowerType.SoulShards)
-        local max  = UnitPowerMax("player", Enum.PowerType.SoulShards)
-        local color = PowerBarColor["SOUL_SHARDS"]
-        color.a = 1
-        return curr, max, color, color
-    end,
-    ["MONK"] = function()
-        local curr = UnitPower("player", Enum.PowerType.Chi)
-        local max  = UnitPowerMax("player", Enum.PowerType.Chi)
-        local color = PowerBarColor["CHI"]
-        color.a = 1
-        return curr, max, color, color
-    end,
-    ["MAGE"] = function()
-        local curr = UnitPower("player", Enum.PowerType.ArcaneCharges)
-        local max  = UnitPowerMax("player", Enum.PowerType.ArcaneCharges)
-        local color = PowerBarColor["ARCANE_CHARGES"]
-        color.a = 1
-        return curr, max, color, color
-    end,
-    ["DEATHKNIGHT"] = function()
-       -- TODO finish implementation for DK
-       -- RUNE_POWER_UPDATE event needs to be registered
-        local ready = 0
-        for i = 1, 6 do
-            local _, _, runeReady = GetRuneCooldown(i)
-            if runeReady then ready = ready + 1 end
-        end
-        return ready, 6,CreateColor(128/256, 128/256, 128/256,1), CreateColor(128/256, 128/256, 128/256,1)
-    end,
-    }
-
-    local classPowerLogicHandler = ClassPowerLogic[playerClass]
-    if classPowerLogicHandler == nil then return end
-
-    local currResources, maxResources, colorMin, colorMax = classPowerLogicHandler()
-
-    local barHeight = frame:GetHeight()
-    if currResources > 0 then
-        frame.PrimaryPowerBar:SetHeight((2* barHeight) / 3)
-        frame.SecondaryPowerBar:SetHeight(barHeight/3)
-        frame.SecondaryPowerBar:SetMinMaxValues(0, maxResources)
-        frame.SecondaryPowerBar:SetValue(currResources)
-
-        local barTexture = frame.SecondaryPowerBar:GetStatusBarTexture()
-        barTexture:SetGradient("HORIZONTAL", colorMin, colorMax)
-
-        frame.SecondaryPowerBar.LeftText:SetTemplateText(string.format("%d/%d", currResources, maxResources))
-        frame.SecondaryPowerBar.RightText:SetTemplateText("")
-    else
-        frame.PrimaryPowerBar:SetHeight(barHeight)
-        frame.SecondaryPowerBar:SetHeight(0)
-        frame.SecondaryPowerBar:SetMinMaxValues(0, maxResources)
-        frame.SecondaryPowerBar:SetValue(currResources)
-        frame.SecondaryPowerBar.LeftText:SetTemplateText("")
-        frame.SecondaryPowerBar.RightText:SetTemplateText("")
-    end
-    frame.SecondaryPowerBar.LeftText:UpdateText()
-    frame.SecondaryPowerBar.RightText:UpdateText()
-
-end
-
-local function prepareBarFontStrings(instance, bar, barInfo)
-        bar.LeftText = CustomText:New(
-            bar,
-            G_MyAddon.SavedVars.Fonts,      -- fontPath
-            G_MyAddon.SavedVars.FontSize,   -- fontSize
-            "SLUG, OUTLINE",                      -- fontFlags
-            {r = 1, g = 1, b = 1, a = 1},   -- fontColor
-            barInfo.LeftText,               -- templateText
-            "OVERLAY",                      -- layer
-            instance.UnitFrameID            -- unit
-            )
-
-        bar.RightText = CustomText:New(
-            bar,
-            G_MyAddon.SavedVars.Fonts,      -- fontPath
-            G_MyAddon.SavedVars.FontSize,  -- fontSize
-            "SLUG, OUTLINE",                      -- fontFlags
-            {r = 1, g = 1, b = 1, a = 1},   -- fontColor
-            barInfo.RightText,               -- templateText
-            "OVERLAY",                      -- layer
-            instance.UnitFrameID            -- unit
-            )
-
-
-        bar.LeftText:SetPoint("LEFT",bar,"LEFT", 3,0)
-        bar.RightText:SetPoint("RIGHT",bar,"RIGHT", -3,0)
-
-        -- -- set max width, max height, turn off word wrap for text to not overflow the bar
-        bar.LeftText:SetWordWrap(false) 
-        bar.LeftText:SetJustifyH("LEFT")
-        bar.LeftText:SetWidth(instance.Width/2)
-        bar.LeftText:SetMaxLines(1)
-
-        bar.RightText:SetWordWrap(false) 
-        bar.RightText:SetJustifyH("RIGHT")
-        bar.RightText:SetWidth(instance.Width/2)
-        bar.RightText:SetMaxLines(1)
-
-        bar.LeftText:UpdateText()
-        bar.RightText:UpdateText()
-end
-
 -- Function for adding border to bar frame
 local function addBorder(bar, thickness)
     -- Create "Frame container" for all the border lines
@@ -221,359 +85,6 @@ local function setupMainFrame (instance, height)
     
 end
 
--- creates Bar, sets width, height and texture
-local function createBar(height, width, idx, parent)
-    local bar = CreateFrame("StatusBar", "Bar" .. idx, parent)
-    
-    bar:SetSize(width, height)
-    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-
-    -- bar.tex = bar:CreateTexture(nil, "OVERLAY")
-    -- bar.tex:SetAtlas("Mission-widgetstatusbar-fill-white")
-    -- bar.tex:SetBlendMode("ADD")
-    -- bar.tex:SetDesaturated(true) -- Umožní ti barvit texturu pomocí SetVertexColor
-    -- bar.tex:SetAllPoints()
-
-
-    return bar
-end
-
--- Function to change health bar color according to class/reaction
-local function changeHealthBarColor (frame, unit)
-    local colorRow = {r = 0.5, g = 0.5, b = 0.5}
-
-    if(UnitExists(unit)) then
-        -- if unit is player, use class colors
-        if(UnitIsPlayer(unit)) then
-            local _, cl = UnitClass(unit)
-            colorRow = classColors[cl]
-        -- otherwise, use "reaction" color
-        else
-            local reaction = UnitReaction("player", unit)
-            if reaction then
-                -- green for friendly
-                if reaction >= 5 then
-                    colorRow = {r = 0, g = 1, b = 0}
-                -- yellow for neutral
-                elseif reaction >= 3 then
-                    colorRow = {r = 1, g = 1, b = 0}
-                -- red for unfriendly/aggressive
-                else
-                    colorRow = {r = 1, g = 0, b = 0}
-                end
-            end
-        end
-    frame:SetStatusBarColor(colorRow.r, colorRow.g, colorRow.b, 1)
-    end
-end
-
--- update information on healthbar
-local function updateHealthBar(frame, unit, bar)
-    local currHP = UnitHealth(unit)
-    local maxHP = UnitHealthMax(unit)
-    frame:SetMinMaxValues(0, maxHP)
-    frame:SetValue(currHP)
-
-    frame.LeftText:UpdateText()
-    frame.RightText:UpdateText()
-end
-
--- change color of power bar according to actual power of unit 
-local function changePowerBarColor(frame, unit)
-    
-    local c, powerToken, r, g, b = UnitPowerType(unit)
-    -- get color of normal power
-    local barColor = GetPowerBarColor(powerToken)
-
-
-    -- if GetPowerBarColor did not return color, unit power is special, use color components from UnitPowerType
-    if barColor == nil then
-        barColor = {}
-        barColor.r, barColor.g, barColor.b = r,g,b
-    end
-    
-    frame:SetStatusBarColor(barColor["r"], barColor["g"], barColor["b"] , 1)
-end
-
--- TODO check if Update functions for different bar types can be merged
--- Depending on Event, choose what needs to be update on HP bar
-function UnitFrame:UpdateHpBar(frame, event, unit, bar, ...)
-    -- if health of unit changes
-    if (event == "UNIT_HEALTH") then
-        updateHealthBar(frame, unit, bar)
-    -- if player logs into game, changes target or focus
-    elseif(event == "PLAYER_TARGET_CHANGED" or event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_FOCUS_CHANGED") then
-        -- event PLAYER_TARGET_CHANGED doesn't tell which unit changed target 
-        -- if player changed target
-        if event == "PLAYER_TARGET_CHANGED" then
-            -- and frame belongs to target of target
-            if(self.UnitFrameID == "targettarget") then
-                -- the unit needs to be changed to target of target
-                unit = "targettarget"
-            -- if frame belongs to focus
-            elseif (self.UnitFrameID == "focus") then
-                -- the unit needs to be changed to focus
-                unit = "focus"
-            -- otherwise unit needs to be changed to target
-            else
-                unit = "target"
-            end
-        -- other events needs unit set to itself
-        else
-            unit = self.UnitFrameID
-        end
-        -- check to be sure that Unit exists
-        if(UnitExists(unit)) then
-            -- change color and text on bar
-            changeHealthBarColor (frame, unit)
-            updateHealthBar(frame, unit, bar)
-        end
-    -- if target of target polling event triggers
-    elseif (event == "POLLING") then
-        -- change color and text on bar
-        changeHealthBarColor (frame, unit)
-        updateHealthBar(frame, unit, bar)
-    end
-
-    if (event == "UNIT_PET" or event == "PET_UI_UPDATE") then
-        if(UnitExists("pet") == true) then
-            unit = "pet"
-            changeHealthBarColor (frame, unit)
-            updateHealthBar(frame, unit, bar)
-        end
-    end
-end
-
--- TODO check if update functions can be merged
--- TODO if not, refactor this function
--- depending on event, choose what needs to be updated on power bar
-function UnitFrame:UpdatePowerBar(frame, event, unit, bar)
-    -- if player changes focus
-    if(event == "PLAYER_FOCUS_CHANGED") then
-        -- set unit to focus and update power bar color
-        unit = "focus"
-        if(UnitExists("focus")) then
-            changePowerBarColor(frame.PrimaryPowerBar, "focus")
-        end
-    end
-    -- if event is polling from target of target frame
-    -- or unit changed target
-    -- or player changed target and target of target needs to be updated
-    if (event == "POLLING" or event == "UNIT_TARGET" or (event == "PLAYER_TARGET_CHANGED" and unit == "targettarget")) then
-        -- check unit and change power color
-        if(UnitExists(unit)) then
-            changePowerBarColor(frame.PrimaryPowerBar, unit)
-        end
-    -- if player logged into game
-    -- or player power changed (shapeshift, talent change, ...)
-    -- or players target changed
-    elseif(event == "PLAYER_ENTERING_WORLD" or event == "UNIT_DISPLAYPOWER" or event == "PLAYER_TARGET_CHANGED")then
-        -- if player logged in
-        if(event == "PLAYER_ENTERING_WORLD")then
-            -- change unit to self
-            unit = self.UnitFrameID
-        -- if player changed target
-        elseif (event == "PLAYER_TARGET_CHANGED") then
-            -- then unit needs to change to target
-            unit = "target"
-        end
-        -- check unit and change color of power bar
-        if(UnitExists(unit)) then
-            changePowerBarColor(frame.PrimaryPowerBar, unit)
-        end
-    elseif (event == "UNIT_PET" or event == "PET_UI_UPDATE") then
-        if(event == "PET_UI_UPDATE") then
-            unit = "pet"
-        end
-            changePowerBarColor(frame.PrimaryPowerBar, unit)
-    end
-    -- update text on bars
-    local powerType = UnitPowerType(unit)
-    local currPow = UnitPower(unit, powerType)
-    local maxPow = UnitPowerMax(unit, powerType)
-    frame.PrimaryPowerBar:SetMinMaxValues(0, maxPow)
-    frame.PrimaryPowerBar:SetValue(currPow)
-
-    frame.PrimaryPowerBar.LeftText:UpdateText()
-    frame.PrimaryPowerBar.RightText:UpdateText()
-
-    if(unit == "player") then
-        updateSecondaryBar(frame, unit)
-    end
-
-end
-
--- TODO add channeling functionality
--- cast bar
-function UnitFrame:castBarRun (frame, event, unitTarget)
-    --print("CastBar", event, unitTarget)
-    if event == "UNIT_SPELLCAST_START" then
-        frame:SetMinMaxValues(0, 1)
-        frame:Show()
-    elseif event == "UNIT_SPELLCAST_STOP" then
-        frame:Hide()
-    end
-
-end
-
--- register events and callbacks according to bar type and unit
-local function initializeBar(instance, bar, unitTypeID)
-    local frame = bar.BarFrame
-    local barType = bar.BarType
-
-    -- unregisted all events and callbacks
-    frame:UnregisterAllEvents()
-    frame:SetScript("OnEvent", nil)
-    frame:SetScript("OnUpdate", nil)
-    --print(instance, frame, unitTypeID, barType)
-    -- Health Bar 
-    if(barType == "HB") then
-        -- target of target 
-         if(unitTypeID == "targettarget") then
-            -- target of target change event
-           frame:RegisterUnitEvent("UNIT_TARGET", "target")
-           -- when player changes target, its target changes too
-           frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-           frame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
-
-           -- target of target does not have events for resource change
-           -- Polling has to be used
-            local elapsed = 0
-            frame:SetScript("OnUpdate", function(f, delta)
-                elapsed = elapsed + delta
-                -- 5 times per second
-                if elapsed > 0.2 then 
-                    elapsed = 0
-                    -- redraw the HP bar
-                    instance:UpdateHpBar(f, "POLLING", "targettarget", bar)
-                end
-            end)
-        -- other units
-        else
-            -- player login
-            frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-            -- unit change health
-            frame:RegisterUnitEvent("UNIT_HEALTH", unitTypeID)
-
-            -- for target frame, change of player's target needs to be registered
-            if (unitTypeID == "target") then
-                frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-            -- for focus, change of players focus needs to be registered
-            elseif(unitTypeID == "focus") then
-                frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
-            elseif(unitTypeID == "pet") then
-                frame:RegisterEvent("UNIT_PET")
-                frame:RegisterEvent("PET_UI_UPDATE")
-            end
-        end
-        --  setup callback for events
-        frame:SetScript("OnEvent", function (f, event, unitToken, ...)
-            local realUnit = (unitTypeID == "targettarget") and "targettarget" or unitToken
-            instance:UpdateHpBar(f, event, realUnit, bar, ...)
-        end)
-        -- change health bar color at bar creation
-        changeHealthBarColor (frame, unitTypeID)
-
-    elseif (barType == "PB") then
-        -- target of target
-         if(unitTypeID == "targettarget") then
-            -- target of target change event
-            frame:RegisterUnitEvent("UNIT_TARGET", "target")
-            -- when player changes target, its target changes too
-            frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-            frame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
-            
-            -- target of target does not have events for resource change
-           -- Polling has to be used
-            local elapsed = 0
-            frame:SetScript("OnUpdate", function(f, delta)
-                elapsed = elapsed + delta
-                -- 5 times per second
-                if elapsed > 0.2 then
-                    elapsed = 0
-                    -- redraw the power bar
-                    instance:UpdatePowerBar(f, "POLLING", "targettarget", bar)
-                end
-            end)
-            -- setup callback for events with different parameters (unit == "targettarget")
-            frame:SetScript("OnEvent", function (f, event, unitToken)
-                instance:UpdatePowerBar(f, event, "targettarget", bar)
-            end)
-         else
-            -- power value changed
-            frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", unitTypeID)
-            -- player login
-            frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-            -- unit power type changed
-            frame:RegisterUnitEvent("UNIT_DISPLAYPOWER", unitTypeID)
-
-            -- for target, change of player's target needs to be registered
-            if (unitTypeID == "target") then
-                frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-            -- for focus, change of player's focus needs to be registered
-            elseif (unitTypeID == "focus") then
-                frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
-            elseif(unitTypeID == "pet") then
-                frame:RegisterEvent("UNIT_PET")
-                frame:RegisterEvent("PET_UI_UPDATE")
-            end
-            -- setup callback for events
-            frame:SetScript("OnEvent", function (f, event, unitToken, ...)
-                instance:UpdatePowerBar(f, event, unitToken, bar, ...)
-            end)
-         end
-
-
-    elseif (barType == "CB") then
-        -- register cast start and cast stop
-        -- TODO add channeling
-        frame:RegisterUnitEvent("UNIT_SPELLCAST_START", unitTypeID)
-        frame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unitTypeID)
-
-        -- set color to yellow
-        frame:SetStatusBarColor(0.8,0.8,0,1)
-        frame:SetMinMaxValues(0,0)
-
-        -- on update, watch if unit did not start casting 
-        frame:SetScript("OnUpdate", function (f)
-            local p = UnitCastingDuration(unitTypeID)
-            if(p ~= nil) then
-                f:SetValue(p:GetElapsedPercent())
-            else
-                f:Hide()
-            end
-        end)
-        -- on event occuring, run callback
-        frame:SetScript("OnEvent", function (f, event, unitToken)
-            instance:castBarRun(f, event, unitToken)
-        end)
-        -- hide frame at start
-        frame:Hide()
-
-    elseif (barType == "EB") then
-        if(unitTypeID == "targettarget") then
-            -- target of target change event
-            frame:RegisterUnitEvent("UNIT_TARGET", "target")
-            -- when player changes target, its target changes too
-            frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-            frame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
-        end
-        frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-        if (unitTypeID == "target") then
-            frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-            -- for focus, change of players focus needs to be registered
-        elseif(unitTypeID == "focus") then
-            frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
-        elseif(unitTypeID == "pet") then
-            frame:RegisterEvent("UNIT_PET")
-            frame:RegisterEvent("PET_UI_UPDATE")
-        end
-        frame:SetScript("OnEvent", function (f, event, unitToken)
-            frame.LeftText:UpdatefText()
-            frame.RightText:UpdateText()
-        end)
-    end
-end
 
 -- constructor for Frame instance
 function UnitFrame:New(initVal, unitTypeID)
@@ -598,72 +109,31 @@ function UnitFrame:New(initVal, unitTypeID)
     for i = 1, 5, 1 do
         local anchorBar
         local barInfo = initVal["Bar" .. i]
-
-        -- bar creation + data load
         instance.BarArr[i] = {}
-        instance.BarArr[i].Height = barInfo.Height
         instance.BarArr[i].BarType = barInfo.BarType
+        instance.BarArr[i].Bar = 0
 
-        instance.BarArr[i].BarFrame = createBar(barInfo.Height, instance.Width, i, instance.MainFrame)
-        instance.BarArr[i].BarFrame:SetStatusBarColor(0,0,0,0)
-
-        -- initialize bar according to type
-        if(instance.BarArr[i].BarType == "HB")then
-            initializeBar(instance, instance.BarArr[i], unitTypeID)
-            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
-
-        elseif (instance.BarArr[i].BarType == "PB") then
-            -- TODO add logic for secondary power
-            -- register events for bar, set scripts for bar
-            initializeBar(instance, instance.BarArr[i], unitTypeID)
-
-            
-            instance.BarArr[i].BarFrame.PrimaryPowerBar = createBar(barInfo.Height, instance.Width, i .. "Primary", instance.BarArr[i].BarFrame)
-            instance.BarArr[i].BarFrame.SecondaryPowerBar = createBar(0, instance.Width, i .. "Secondary", instance.BarArr[i].BarFrame)
-
-            instance.BarArr[i].BarFrame.PrimaryPowerBar:SetStatusBarColor(1,0.5,1,1)
-            instance.BarArr[i].BarFrame.SecondaryPowerBar:SetStatusBarColor(0,0.5,1,1)
-            instance.BarArr[i].BarFrame.PrimaryPowerBar:SetPoint("TOPLEFT",instance.BarArr[i].BarFrame, "TOPLEFT")
-            instance.BarArr[i].BarFrame.PrimaryPowerBar:SetPoint("TOPRIGHT", instance.BarArr[i].BarFrame, "TOPRIGHT")
-
-            instance.BarArr[i].BarFrame.SecondaryPowerBar:SetPoint("TOPLEFT",instance.BarArr[i].BarFrame.PrimaryPowerBar, "BOTTOMLEFT")
-            instance.BarArr[i].BarFrame.SecondaryPowerBar:SetPoint("TOPRIGHT", instance.BarArr[i].BarFrame.PrimaryPowerBar, "BOTTOMRIGHT")
-
-            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame.PrimaryPowerBar, barInfo)
-            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame.SecondaryPowerBar, barInfo)
-
-
-            -- prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
-        elseif (instance.BarArr[i].BarType == "CB") then
-            initializeBar(instance, instance.BarArr[i], unitTypeID)
-            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
-
-        elseif (instance.BarArr[i].BarType == "EB") then
-            prepareBarFontStrings(instance, instance.BarArr[i].BarFrame, barInfo)
-        end
-
-        -- add border to bar
-        addBorder(instance.BarArr[i].BarFrame, 1)
-
-        -- add height of all visible bars 1
-        h = h + (i <= instance.BarsPerFrame and instance.BarArr[i].Height or 0)
-        
-        -- first bar anchors to the main frame
         if i == 1 then
             anchorBar = instance.MainFrame
         -- others anchor to the previous bar
         else
-            anchorBar = instance.BarArr[i-1].BarFrame
-        end
-        -- anchor bars under each other
-        instance.BarArr[i].BarFrame:SetPoint("TOPLEFT",anchorBar,(i == 1 and "TOPLEFT" or "BOTTOMLEFT"))
-        instance.BarArr[i].BarFrame:SetPoint("TOPRIGHT",anchorBar,(i == 1 and "TOPRIGHT" or "BOTTOMRIGHT"))
-
-        -- hide bars if they are not supposed to be visible
-        if(i > initVal.BarCount) then
-            instance.BarArr[i].BarFrame:Hide()
+            --for k, v in pairs( instance.BarArr[i - 1]) do print("key:", k, "value:", v) end
+            anchorBar = instance.BarArr[i-1].Bar:GetFrame()
         end
 
+        if(instance.BarArr[i].BarType == "HB") then
+            instance.BarArr[i].Bar = HealthBar:New(instance.MainFrame, instance.UnitFrameID, instance.Width, anchorBar, barInfo, i == 1)
+        elseif (instance.BarArr[i].BarType == "PB") then
+            instance.BarArr[i].Bar = PowerBar:New(instance.MainFrame, instance.UnitFrameID, instance.Width, anchorBar, barInfo, i == 1)
+        elseif (instance.BarArr[i].BarType == "CB") then
+            instance.BarArr[i].Bar = CastBar:New(instance.MainFrame, instance.UnitFrameID, instance.Width, anchorBar, barInfo, i == 1)
+        elseif (instance.BarArr[i].BarType == "EB") then
+            instance.BarArr[i].Bar = InfoBar:New(instance.MainFrame, instance.UnitFrameID, instance.Width, anchorBar, barInfo, i == 1)
+
+        end
+
+        -- -- add height of all visible bars 
+        h = h + (i <= instance.BarsPerFrame and barInfo.Height or 0)
     end
 
     -- setup events, callbacks and properties of main frame
@@ -674,54 +144,55 @@ function UnitFrame:New(initVal, unitTypeID)
 end
 
 
-
+-- TODO fix applying settings for frames
 -- Function called during changes in Options
 function UnitFrame:ApplySettings()
 
-    --print("------------------------------------------------------")
-    local h = 0
-    local anchorPoint = anchorFrameTranslation[self.AnchorToFrame]
-    local anchorFrame = anchorPoint()
+    -- --print("------------------------------------------------------")
+    -- local h = 0
+    -- local anchorPoint = anchorFrameTranslation[self.AnchorToFrame]
+    -- local anchorFrame = anchorPoint()
 
-    self.MainFrame:ClearAllPoints()
-    for i = 1, self.BarsPerFrame, 1 do
-        h = h + self.BarArr[i].Height
-        self.BarArr[i].BarFrame:SetSize(self.Width, self.BarArr[i].Height)
-        --TODO use customText instead
-        -- self.BarArr[i].BarFrame.LeftText:SetWidth(self.Width/2)
-        -- self.BarArr[i].BarFrame.RightText:SetWidth(self.Width/2)
+    -- self.MainFrame:ClearAllPoints()
+    -- for i = 1, self.BarsPerFrame, 1 do
+    --     h = h + self.BarArr[i].Height
+    --     self.BarArr[i].BarFrame:SetSize(self.Width, self.BarArr[i].Height)
+    --     --TODO use customText instead
+    --     -- self.BarArr[i].BarFrame.LeftText:SetWidth(self.Width/2)
+    --     -- self.BarArr[i].BarFrame.RightText:SetWidth(self.Width/2)
 
-    end
-    self.Height = h
-    self.MainFrame:SetHeight(self.Height)
-    self.MainFrame:SetWidth(self.Width)
-    self.MainFrame:SetPoint(self.AnchorByPoint, anchorFrame,self.AnchorToPoint, self.X, self.Y)
+    -- end
+    -- self.Height = h
+    -- self.MainFrame:SetHeight(self.Height)
+    -- self.MainFrame:SetWidth(self.Width)
+    -- self.MainFrame:SetPoint(self.AnchorByPoint, anchorFrame,self.AnchorToPoint, self.X, self.Y)
 
-    --print("------------------------------------------------------")
+    -- --print("------------------------------------------------------")
 
 end
 
+-- TODO fix saving when loging out
 -- Function for storing information about frames, called during logout
 function UnitFrame:Save(storage)
-    local storageBarInfo
-    local selfBarInfo
+    -- local storageBarInfo
+    -- local selfBarInfo
 
-    storage.AnchorToFrame = self.AnchorToFrame
-    storage.AnchorByPoint = self.AnchorByPoint
-    storage.AnchorToPoint = self.AnchorToPoint
-    storage.FrameWidth = self.Width
-    storage.BarCount = self.BarCount
-    storage.X = self.X
-    storage.Y = self.Y
+    -- storage.AnchorToFrame = self.AnchorToFrame
+    -- storage.AnchorByPoint = self.AnchorByPoint
+    -- storage.AnchorToPoint = self.AnchorToPoint
+    -- storage.FrameWidth = self.Width
+    -- storage.BarCount = self.BarCount
+    -- storage.X = self.X
+    -- storage.Y = self.Y
 
-    for i = 1, 5, 1 do
-        storageBarInfo = storage["Bar" .. i]
-        selfBarInfo = self.BarArr[i]
+    -- for i = 1, 5, 1 do
+    --     storageBarInfo = storage["Bar" .. i]
+    --     selfBarInfo = self.BarArr[i]
 
-        storageBarInfo.Height = selfBarInfo.Height
-        storageBarInfo.BarType = selfBarInfo.BarType
-        --TODO update when customText is in use
-        -- storageBarInfo.LeftText = selfBarInfo.LeftText
-        -- storageBarInfo.RightText = selfBarInfo.RightText
-    end
+    --     storageBarInfo.Height = selfBarInfo.Height
+    --     storageBarInfo.BarType = selfBarInfo.BarType
+    --     --TODO update when customText is in use
+    --     -- storageBarInfo.LeftText = selfBarInfo.LeftText
+    --     -- storageBarInfo.RightText = selfBarInfo.RightText
+    -- end
 end

@@ -139,7 +139,11 @@ local function changeHealthBarColor (frame, unit)
                 end
             end
         end
-    frame:SetStatusBarColor(colorRow.r, colorRow.g, colorRow.b, 1)
+        if(colorRow == nil) then
+            colorRow = {r = 0.5, g = 0.5, b = 0.5}
+            --print(unit)
+        end
+        frame:SetStatusBarColor(colorRow.r, colorRow.g, colorRow.b, 1)
     end
 end
 
@@ -156,8 +160,8 @@ local function eventHandler(self, event, instance, ...)
         instance.healthBar:SetValue(cur)
         
         -- Dynamic color based on health percentage
-        local color = UnitHealthPercent(unit, true, healthCurve)
-        instance.healthBar:GetStatusBarTexture():SetVertexColor(color:GetRGB())
+        -- local color = UnitHealthPercent(unit, true, healthCurve)
+        --instance.healthBar:GetStatusBarTexture():SetVertexColor(color:GetRGB())
         
         instance.hpText:UpdateText()
 
@@ -200,7 +204,6 @@ local function eventHandler(self, event, instance, ...)
     elseif (event == "UNIT_CONNECTION") then
         local isConnected = (select(2, ...))
         local unit = (select(1,...))
-        print(event, ...)
         if(unit == instance.unit) then
             if( isConnected == false) then
                 instance.hpText:SetTemplateText("~dc~")
