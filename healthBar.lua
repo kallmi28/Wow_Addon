@@ -96,7 +96,7 @@ end
 local function createBar (parent, width, height)
     local bar = CreateFrame("StatusBar", "HealthBar", parent)
     bar:SetSize(width, height)
-    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    bar:SetStatusBarTexture("Interface\\AddOns\\MyAddon\\textures/MyTexture.tga")
     bar:SetStatusBarColor(0,0,0,0)
 
     return bar
@@ -160,7 +160,7 @@ function HealthBar:initializeBar (barFrame, unitType)
             if elapsed > 0.2 then 
                 elapsed = 0
                 -- redraw the HP bar
-                self:UpdateHpBar(f, "POLLING", "targettarget", bar)
+                self:UpdateHpBar(f, "POLLING", "targettarget")
             end
         end)
     -- other units

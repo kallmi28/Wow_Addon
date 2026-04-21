@@ -25,6 +25,8 @@ powerBar.lua
 castBar.lua
 infoBar.lua
 
+auraTrackerFrame.lua
+
 unitPartyFrame.lua
 unitCellFrame.lua
 unitFrame.lua

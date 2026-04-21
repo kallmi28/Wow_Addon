@@ -68,6 +68,9 @@ G_MyAddon.Frames.TargetFrame = {}
 G_MyAddon.Frames.TargetOfTargetFrame = {}
 G_MyAddon.Frames.FocusFrame = {}
 G_MyAddon.Frames.PetFrame = {}
+G_MyAddon.Frames.PartyFrame = {}
+
+
 
 G_MyAddon.SavedVars = {}
 G_MyAddon.Options = {}
@@ -88,6 +91,20 @@ local function initFunction(self, event, addonName)
         G_MyAddon.Frames.TargetOfTargetFrame.mainFrame = UnitFrame:New(savedVar.TargetOfTargetFrame, "targettarget")
         G_MyAddon.Frames.FocusFrame.mainFrame = UnitFrame:New(savedVar.FocusFrame, "focus")
         G_MyAddon.Frames.PetFrame.mainFrame = UnitFrame:New(savedVar.PetFrame, "pet")
+
+
+        -- prepare data for party frame
+        -- TODO add these into default data and savedVar
+        savedVar.PartyFrame = {}
+        savedVar.PartyFrame.X = -210
+        savedVar.PartyFrame.Y = -250
+        savedVar.PartyFrame.CellWidth = 100
+        savedVar.PartyFrame.CellHeight = 60
+        savedVar.PartyFrame.HpText = "[PercHP]%%"
+
+        G_MyAddon.Frames.PartyFrame.mainFrame = UnitPartyFrame:New(savedVar.PartyFrame)
+
+
 
     elseif(event == "PLAYER_LOGOUT") then
         print("I will never see this, but config has been saved succesfully")
@@ -143,7 +160,7 @@ classColors = {
 -- unitFrame:SetScript("OnDragStart", unitFrame.StartMoving)
 -- unitFrame:SetScript("OnDragStop", unitFrame.StopMovingOrSizing)
 
-local pf = UnitPartyFrame:New(-210, -250, 100, 60, "[PercHP]%%")
+-- local pf = UnitPartyFrame:New(-210, -250, 100, 60, "[PercHP]%%")
 
 -- local X, Y = 200, 50
 -- local testFrame = CreateFrame("Frame", "MyGlowTestFrame", UIParent)
@@ -211,3 +228,110 @@ local pf = UnitPartyFrame:New(-210, -250, 100, 60, "[PercHP]%%")
 -- -- end)
 
 -- print("Glow Script Loaded. If you see a blue box, the layer works. If it pulses, animation works.")
+
+
+local testAura = AuraTrackerFrame:New(8936, "player")
+
+local TARGET_SPELL_ID = {8936, 48438, 774} -- Změň na ID, které chceš sledovat
+local auraFrame = {}
+
+for i = 1, 3, 1 do
+    -- 1. Vytvoření Framu
+-- 1. Vytvoření základního Framu
+local singleAuraFrame = CreateFrame("Frame", "MySingleAuraTracker", UIParent)
+singleAuraFrame:SetSize(16, 16)
+singleAuraFrame:SetPoint("CENTER", 0 + i * 20, 200)
+
+-- 2. Ikona (Spodní vrstva základu)
+singleAuraFrame.icon = singleAuraFrame:CreateTexture(nil, "BACKGROUND")
+singleAuraFrame.icon:SetAllPoints()
+singleAuraFrame.icon:SetTexture(C_Spell.GetSpellTexture(TARGET_SPELL_ID[i]))
+
+-- 3. Cooldown (Grafika - automaticky se vykresluje nad BACKGROUND texturami rodiče)
+singleAuraFrame.cd = CreateFrame("Cooldown", nil, singleAuraFrame, "CooldownFrameTemplate")
+singleAuraFrame.cd:SetAllPoints()
+singleAuraFrame.cd:SetReverse(true)
+singleAuraFrame.cd:SetHideCountdownNumbers(true)
+
+-- 4. Text (Odpočet) - Trik je v prvním argumentu CreateFontString
+-- Místo 'singleAuraFrame' použijeme 'singleAuraFrame.cd'
+singleAuraFrame.text = singleAuraFrame.cd:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+singleAuraFrame.text:SetPoint("CENTER", singleAuraFrame, "BOTTOMRIGHT", -2, 2)
+singleAuraFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+
+    -- 2. Funkce pro aktualizaci
+    local function UpdateSingleAura(self, SPID)
+        -- Klíčová funkce: GetAuraDataBySpellID
+        -- Vrací tabulku aury jen pro dané ID
+        -- print(SPID)
+        local spellName = C_Spell.GetSpellName(SPID)
+        local aura = C_UnitAuras.GetAuraDataBySpellName("player", spellName)
+        
+        if aura then
+            -- Nastavení času pro Cooldown widget
+            if aura.duration > 0 then
+                self.cd:SetCooldown(aura.expirationTime - aura.duration, aura.duration)
+                self.cd:Show()
+                self.expirationTime = aura.expirationTime
+            else
+                self.cd:Hide()
+                self.expirationTime = nil
+            end
+            
+            self:SetAlpha(1.0) -- Plně viditelný, když buff běží
+            self.icon:SetDesaturated(false)
+        else
+            -- Buff chybí - zneviditelníme nebo ztmavíme
+            self.cd:Hide()
+            self.expirationTime = nil
+            self.text:SetText("")
+            self:SetAlpha(0) -- Poloprůhledný, když buff chybí
+            self.icon:SetDesaturated(true) -- Černobílý
+        end
+    end
+
+    -- 3. Eventy
+    singleAuraFrame:RegisterUnitEvent("UNIT_AURA", "player")
+    singleAuraFrame:SetScript("OnEvent", function(self)
+        UpdateSingleAura(self, TARGET_SPELL_ID[i])
+    end)
+    -- 4. OnUpdate pro plynulý textový odpočet
+    singleAuraFrame:SetScript("OnUpdate", function(self, elapsed)
+        if self.expirationTime then
+            local timeLeft = self.expirationTime - GetTime()
+            if timeLeft > 0 then
+                self.text:SetFormattedText("%.0f", timeLeft)
+            else
+                self.text:SetText("")
+            end
+        end
+    end)
+
+
+
+    auraFrame[i] = singleAuraFrame
+end
+
+
+
+
+-- Inicializace
+-- UpdateSingleAura(singleAuraFrame)
+
+
+-- UnitGroupRolesAssigned(unit)
+
+if UnitGroupRolesAssigned("player") == "DAMAGER" then
+    print(UnitGroupRolesAssigned("player"))
+else
+    print(UnitGroupRolesAssignedEnum("player"))
+end
+
+if IsInRaid() then
+    for i = 1, GetNumGroupMembers() do
+        local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML, combatRole = GetRaidRosterInfo(i)
+        if name then
+            print(GetRaidRosterInfo(i))
+        end
+    end
+end

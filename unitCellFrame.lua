@@ -230,11 +230,12 @@ function UnitCellFrame:New(width, height, parent, unit, x, y, hpText)
     instance.frame:RegisterForClicks("AnyUp")
     instance.frame:SetAttribute("*type1", "target")
     instance.frame:SetAttribute("*type2", "togglemenu")
+    instance.frame:SetAttribute("hasUnitTooltip", true)
 
     instance.bg = instance.frame:CreateTexture("BGFRAME", "BACKGROUND")
     instance.bg:SetPoint("TOPLEFT", instance.frame, "TOPLEFT", 2, -2)
     instance.bg:SetPoint("BOTTOMRIGHT", instance.frame, "BOTTOMRIGHT", -2, 2)
-    instance.bg:SetColorTexture(0.1, 0.1, 0.1, 1) 
+    instance.bg:SetColorTexture(0.1, 0.1, 0.1, 1)
 
     -- Glow initialization
     instance.glow = CreateFrame("Frame", nil, instance.frame)
@@ -246,7 +247,7 @@ function UnitCellFrame:New(width, height, parent, unit, x, y, hpText)
 
     instance.glow.tex:SetAtlas("Mission-LootBackgroundGlow")
     instance.glow.tex:SetBlendMode("ADD")
-    instance.glow.tex:SetDesaturated(true) -- Umožní ti barvit texturu pomocí SetVertexColor
+    instance.glow.tex:SetDesaturated(true)
     instance.glow.tex:SetAllPoints()
     instance.glow.tex:SetPoint("TOPLEFT", instance.frame, "TOPLEFT",  -(0.1*width), height * 0.37)
     instance.glow.tex:SetPoint("BOTTOMRIGHT", instance.frame, "BOTTOMRIGHT",  (0.1*width), -(height * 0.37))
@@ -262,7 +263,8 @@ function UnitCellFrame:New(width, height, parent, unit, x, y, hpText)
 
     -- Health bar
     instance.healthBar = CreateFrame("StatusBar", "HPBARGFRAMWE", instance.frame)
-    instance.healthBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    instance.healthBar:SetStatusBarTexture("Interface\\AddOns\\MyAddon\\textures/MyTexture.tga")
+
     instance.healthBar:SetPoint("TOPLEFT", instance.frame, "TOPLEFT", 2, -2)
     instance.healthBar:SetPoint("BOTTOMRIGHT", instance.frame, "BOTTOMRIGHT", -2, 2)
     instance.healthBar:SetFrameLevel(instance.frame:GetFrameLevel() + 1)
@@ -272,19 +274,38 @@ function UnitCellFrame:New(width, height, parent, unit, x, y, hpText)
     instance.powerBar:SetHeight(8)
     instance.powerBar:SetPoint("LEFT", instance.healthBar, "BOTTOMLEFT", width * 0.05, 0)
     instance.powerBar:SetPoint("RIGHT", instance.healthBar, "BOTTOMRIGHT", -(width * 0.05), 0)
-    instance.powerBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    instance.powerBar:SetStatusBarTexture("Interface\\AddOns\\MyAddon\\textures/MyTexture.tga")
     instance.powerBar:SetFrameLevel(instance.healthBar:GetFrameLevel() + 2)
 
     instance.powerBar.bg = instance.powerBar:CreateTexture(nil, "BACKGROUND")
     instance.powerBar.bg:SetAllPoints()
     instance.powerBar.bg:SetColorTexture(0, 0, 0, 0.6)
 
-    -- Custom Texts with SLUG
+    -- Custom Texts
     instance.nameText = CustomText:New(instance.healthBar, "Fonts\\FRIZQT__.TTF", 10, "SLUG", {r=1,g=1,b=1,a=1}, "[UnitName]", "OVERLAY", unit)
     instance.nameText:SetPoint("TOP", instance.healthBar, "TOP", 0, -2)
 
     instance.hpText = CustomText:New(instance.healthBar, "Fonts\\FRIZQT__.TTF", 10, "SLUG", {r=1,g=1,b=1,a=1}, hpText, "OVERLAY", unit)
     instance.hpText:SetPoint("CENTER", instance.healthBar, "CENTER", 0, 0)
+
+    -- Buff tracker
+    instance.buffTracker = {8936, 48438, 774, 33763, 155777, 102342}
+    instance.buffTracker.buffTrackerBar = CreateFrame("StatusBar", "fodjgopijew", instance.frame)
+    instance.buffTracker.buffTrackerBar:SetPoint("BOTTOMLEFT", instance.frame, "BOTTOMLEFT", 5, 5)
+    -- instance.buffTracker.buffTrackerBar:SetPoint("BOTTOMLEFT", instance.frame, "BOTTOMLEFT", 0, 100)
+    -- instance.buffTracker.buffTrackerBar:SetPoint("BOTTOMRIGHT", instance.frame, "BOTTOMRIGHT", 0, 100)
+    instance.buffTracker.buffTrackerBar:SetSize(height,width)
+    
+    
+    instance.buffTracker.buffTrackerBar.bg = instance.buffTracker.buffTrackerBar:CreateTexture("BGFRAME", "BACKGROUND")
+    instance.buffTracker.buffTrackerBar.bg:SetColorTexture(1, 1, 0.1, 1)
+
+    instance.buffTracker.buffTrackerBar.Buff = {}
+
+    for i = 1, 6, 1 do
+        instance.buffTracker.buffTrackerBar.Buff[i] = AuraTrackerFrame:New(instance.buffTracker[i], instance.unit, 0 + (i-1) * 16, 0, instance.buffTracker.buffTrackerBar)
+    end
+
 
     -- Event Handling
     instance.frame:RegisterUnitEvent("UNIT_HEALTH", unit)
@@ -311,6 +332,21 @@ function UnitCellFrame:New(width, height, parent, unit, x, y, hpText)
 
     RegisterStateDriver(instance.frame, "visibility", "[@" .. unit .. ",exists] show; hide")
     
+    instance.frame:SetScript("OnEnter", function(self)
+        -- Set anchoring point of HUD
+        GameTooltip_SetDefaultAnchor(GameTooltip, self)
+        
+        -- read unit data from attribute
+        local unit = self:GetAttribute("unit")
+        if unit then
+            GameTooltip:SetUnit(unit)
+            GameTooltip:Show()
+        end
+    end)
+
+    instance.frame:SetScript("OnLeave", function(self)
+        GameTooltip:FadeOut()
+    end)
     return instance
 end
 

@@ -82,11 +82,33 @@ local anchorFrameData = {
     ["FOCUS"] = "Focus Frame",
 }
 
+local blizzardFrameMapping = {
+    {"Player Frame", { PlayerFrame }},
+    {"Target", { TargetFrame }},
+    {"Focus", { FocusFrame }},
+    {"Target of Target", { TargetFrameToT }},
+    {"Pet", { PetFrame }},
+    {"Focus Target", { FocusFrameToT }},
+    {"Party", { PartyFrame }},
+    {"Raid", { CompactRaidFrameContainer }},
+    {"Boss", { Boss1TargetFrame, Boss2TargetFrame, Boss3TargetFrame, Boss4TargetFrame, Boss5TargetFrame }},
+    {"Arena", { ArenaEnemyMatchFrame1, ArenaEnemyMatchFrame2, ArenaEnemyMatchFrame3, ArenaEnemyMatchFrame4, ArenaEnemyMatchFrame5 }},
+}
 
 
-
-
-
+local function hideDefaultBlizzardFrame(blizzardFrame, value)
+    if(value == true) then
+        for index, value in ipairs(blizzardFrame) do
+            UnregisterUnitWatch(value)
+            value:UnregisterAllEvents()
+            value:Hide()
+            
+            value:SetParent(hiddenFrame)
+        end
+    else
+        print(G_AddonNameColoredString, "You need to reload the UI (/reload), before hidden frames reappear.")
+    end
+end
 
 
 -- Show or hide grid on screen
@@ -475,18 +497,7 @@ local function drawDisableBlizzSetting(widget)
         "Arena",
     }
 
-    local blizzardFrameMapping = {
-    {"Player Frame", { PlayerFrame }},
-    {"Target", { TargetFrame }},
-    {"Focus", { FocusFrame }},
-    {"Target of Target", { TargetFrameToT }},
-    {"Pet", { PetFrame }},
-    {"Focus Target", { FocusFrameToT }},
-    {"Party", { PartyFrame }},
-    {"Raid", { CompactRaidFrameContainer }},
-    {"Boss", { Boss1TargetFrame, Boss2TargetFrame, Boss3TargetFrame, Boss4TargetFrame, Boss5TargetFrame }},
-    {"Arena", { ArenaEnemyMatchFrame1, ArenaEnemyMatchFrame2, ArenaEnemyMatchFrame3, ArenaEnemyMatchFrame4, ArenaEnemyMatchFrame5 }},
-}
+
     for i = 1, 10, 1 do
         local cb = AceGUI:Create("CheckBox")
         cb:SetLabel(blizzardFrameMapping[i][1])
@@ -498,19 +509,8 @@ local function drawDisableBlizzSetting(widget)
             -- -- for k, v in pairs(PartyFrame.PartyMemberFramePool) do print("key:", k, "value:", v) end
 			-- for memberFrame in PartyFrame.PartyMemberFramePool:EnumerateActive() 
             -- do for k, v in pairs(memberFrame) do print("key:", k, "value:", v) end print("-----------------")end
+            hideDefaultBlizzardFrame(blizzardFrameMapping[i][2], value)
 
-            if(value == true) then
-                for index, value in ipairs(blizzardFrameMapping[i][2]) do
-                    print(value)
-                    UnregisterUnitWatch(value)
-                    value:UnregisterAllEvents()
-                    value:Hide()
-                    
-                    value:SetParent(hiddenFrame)
-                end
-            else
-                print(G_AddonNameColoredString, "You need to reload the UI (/reload), before hidden frames reappear.")
-            end
         end)
 
     end
@@ -549,6 +549,23 @@ function OptionFrame:New(savedData)
     C_Timer.After(0.05, function()
     tree:SelectByPath("p1")
     end)
+
+    for key, value in pairs(savedData.DisabledBlizzardFrames) do
+        if(value == true) then
+            --print(type(key), key, value)
+            local modString = string.gsub(key, " ", "")
+            modString = string.lower(modString)
+            --print(modString)
+
+            for k, v in pairs(blizzardFrameMapping) do
+                --print(string.lower(string.gsub(v[1], " ", "")), modString)
+                if(string.lower(string.gsub(v[1], " ", "")) == modString) then
+                    --print("Found ", v[1])
+                    hideDefaultBlizzardFrame(v[2], true)
+                end
+            end
+        end
+   end
 
     tree:SetCallback("OnGroupSelected", function(widget, event, groupPath)
         widget:ReleaseChildren()

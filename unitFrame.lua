@@ -70,6 +70,7 @@ local function setupMainFrame (instance, height)
     instance.MainFrame:SetAttribute("*type1", "target")
     -- right click to open menu
     instance.MainFrame:SetAttribute("*type2", "togglemenu") 
+    instance.MainFrame:SetAttribute("hasUnitTooltip", true)
     instance.MainFrame:RegisterForClicks("AnyUp")
 
     -- create background for the frame
@@ -135,6 +136,22 @@ function UnitFrame:New(initVal, unitTypeID)
         -- -- add height of all visible bars 
         h = h + (i <= instance.BarsPerFrame and barInfo.Height or 0)
     end
+
+    instance.MainFrame:SetScript("OnEnter", function(self)
+        -- Set anchoring point of HUD
+        GameTooltip_SetDefaultAnchor(GameTooltip, self)
+        
+        -- read unit data from attribute
+        local unit = self:GetAttribute("unit")
+        if unit then
+            GameTooltip:SetUnit(unit)
+            GameTooltip:Show()
+        end
+    end)
+
+    instance.MainFrame:SetScript("OnLeave", function(self)
+        GameTooltip:FadeOut()
+    end)
 
     -- setup events, callbacks and properties of main frame
     setupMainFrame(instance, h)

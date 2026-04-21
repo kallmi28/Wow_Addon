@@ -117,7 +117,7 @@ end
 local function createBar (parent, width, height)
     local bar = CreateFrame("StatusBar", "PowerBar", parent)
     bar:SetSize(width, height)
-    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    bar:SetStatusBarTexture("Interface\\AddOns\\MyAddon\\textures/MyTexture.tga")
     bar:SetStatusBarColor(0,0,0,0)
 
     return bar

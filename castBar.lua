@@ -6,7 +6,7 @@ CastBar.__index = CastBar
 local function createBar (parent, width, height)
     local bar = CreateFrame("StatusBar", "HealthBar", parent)
     bar:SetSize(width, height)
-    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    bar:SetStatusBarTexture("Interface\\AddOns\\MyAddon\\textures/MyTexture.tga")
     bar:SetStatusBarColor(0,0,0,1)
 
     return bar

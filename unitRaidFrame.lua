@@ -1,11 +1,11 @@
+UnitRaidFrame = {}
+UnitRaidFrame.__index = UnitRaidFrame
 
-UnitPartyFrame = {}
-UnitPartyFrame.__index = UnitPartyFrame
-
-function UnitPartyFrame:New(initVal)
-    local instance = setmetatable({}, UnitPartyFrame)
+function UnitRaidFrame:New(initVal)
+    local instance = setmetatable({}, UnitRaidFrame)
 
     local unitArr = {"player", "party1", "party2", "party3", "party4"}
+
     instance.X = initVal.X
     instance.Y = initVal.Y
     instance.cellWidth = initVal.CellWidth
@@ -15,7 +15,7 @@ function UnitPartyFrame:New(initVal)
     instance.frame = CreateFrame("Frame", "PartyF", UIParent)
     instance.frame:SetPoint("CENTER", UIParent, "CENTER", instance.X, instance.Y)
     instance.frame:SetSize(100, 100)
-    RegisterStateDriver(instance.frame, "visibility", "[group:raid] show; [group:party] show; hide")
+    RegisterStateDriver(instance.frame, "visibility", "[group:raid] show; [group:party] hide; hide")
     
     instance.unitFrame = {}
 
