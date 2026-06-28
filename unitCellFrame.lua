@@ -289,7 +289,17 @@ function UnitCellFrame:New(width, height, parent, unit, x, y, hpText)
     instance.hpText:SetPoint("CENTER", instance.healthBar, "CENTER", 0, 0)
 
     -- Buff tracker
-    instance.buffTracker = {8936, 48438, 774, 33763, 155777, 102342}
+    -- resto druid
+    local _,_,class = UnitClass("player")
+    if(class == 11) then
+        instance.buffTracker = {8936, 48438, 774, 33763, 155777, 102342}
+    elseif (class == 13) then
+    -- aug evoker
+        instance.buffTracker = {410089, 413984, 410263}
+    else
+        print(class)
+        instance.buffTracker = {0}
+    end
     instance.buffTracker.buffTrackerBar = CreateFrame("StatusBar", "fodjgopijew", instance.frame)
     instance.buffTracker.buffTrackerBar:SetPoint("BOTTOMLEFT", instance.frame, "BOTTOMLEFT", 5, 5)
     -- instance.buffTracker.buffTrackerBar:SetPoint("BOTTOMLEFT", instance.frame, "BOTTOMLEFT", 0, 100)
@@ -302,7 +312,7 @@ function UnitCellFrame:New(width, height, parent, unit, x, y, hpText)
 
     instance.buffTracker.buffTrackerBar.Buff = {}
 
-    for i = 1, 6, 1 do
+    for i = 1, #instance.buffTracker, 1 do
         instance.buffTracker.buffTrackerBar.Buff[i] = AuraTrackerFrame:New(instance.buffTracker[i], instance.unit, 0 + (i-1) * 16, 0, instance.buffTracker.buffTrackerBar)
     end
 

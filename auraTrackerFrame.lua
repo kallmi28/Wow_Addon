@@ -2,20 +2,78 @@
 AuraTrackerFrame = {}
 AuraTrackerFrame.__index = AuraTrackerFrame
 
+
 _MEZI_TEST_VAR = 11
 
-local function UpdateSingleAura(self, SPID, unit)
 
-    local spellName = C_Spell.GetSpellName(SPID)
-    local aura = C_UnitAuras.GetAuraDataBySpellName(unit, spellName)
-    
-    
-    if aura then
-        print("updated aura", aura.auraInstanceID)
-        if aura.duration > 0 then
-            self.cd:SetCooldown(aura.expirationTime - aura.duration, aura.duration)
+
+
+local function UpdateSingleAura(self, unit, info, i)
+
+    local duration
+    local expTime
+    local auraType = 0 -- 0 -> init, 1 -> new aura, 2 -> update aura, 4 -> remove aura 
+
+    if info then
+        --print(info.addedAuras, info.updatedAuraInstanceIDs, info.removedAuraInstanceIDs)
+        if info.addedAuras then
+            -- print("updated info, added aura")
+            for k, v in pairs(info.addedAuras) do
+                if not issecretvalue(v.applications) then
+                    -- print("added aira", v.spellId, v.sourceUnit, v.duration, v.auraInstanceID, v.name, unit)
+
+                    if v and v.sourceUnit and v.duration and v.spellId == i.trackedSpellID then
+                        i.auraInstanceId = v.auraInstanceID
+                        print("FOund correct aura, storing aura Instance ID")
+                        auraType = 1
+                        duration = v.duration
+                        expTime = v.expirationTime
+                    end
+                else
+                    --print("aura is secret", v.spellId, v.name)
+                end
+            end
+        end
+        if info.updatedAuraInstanceIDs then
+            --print("updated info, updated aura id")
+            for k, v in pairs(info.updatedAuraInstanceIDs) do
+                -- print("auraID = ", v, i.auraInstanceId)
+                if v and v == i.auraInstanceId then
+                    -- print("updated aura ", i.trackedSpellID, i.auraInstanceId)
+                    local tmp = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, i.auraInstanceId)
+                    duration = tmp.duration
+                    i.auraInstanceId = tmp.auraInstanceID
+                    auraType = 2
+                    expTime = tmp.expirationTime
+                    --for k, v in pairs(tmp) do print("key:", k, "value:", v, "issecretvalue:", issecretvalue(v)) end
+                end
+            end
+        end
+        if info.removedAuraInstanceIDs then
+            -- print("updated info, removed aura id")
+            for k, v in pairs(info.removedAuraInstanceIDs) do
+                -- print("auraID = ", v)
+                if v and v == i.auraInstanceId then
+                    print("remove aura ", i.trackedSpellID, i.auraInstanceId)
+                    duration = 0
+                    auraType = 4
+                    expTime = 0
+                    i.auraInstanceId = 0
+                end
+            end
+        end
+    end
+    --print("-----------------------------")
+    if(auraType ~= 0)  then
+        print ("auraType = ", auraType, "duration", duration)
+    end
+
+
+    if(auraType == 1 or auraType == 2) then
+        if duration > 0 then
+            self.cd:SetCooldownDuration(duration)
             self.cd:Show()
-            self.expirationTime = aura.expirationTime
+            self.expirationTime = expTime
         else
             self.cd:Hide()
             self.expirationTime = nil
@@ -23,19 +81,21 @@ local function UpdateSingleAura(self, SPID, unit)
         
         self:SetAlpha(1.0)
         self.icon:SetDesaturated(false)
-    else
+    elseif (auraType == 4) then
         self.cd:Hide()
         self.expirationTime = nil
         self.text:SetText("")
         --self:SetAlpha(0)
         self.icon:SetDesaturated(true)
     end
+
 end
 
 function AuraTrackerFrame:New (spellID, unit, X, Y, parent)
     local instance = setmetatable ({}, AuraTrackerFrame)
     instance.trackedSpellID = spellID
     instance.unitType = unit
+    instance.auraInstanceId = 0
 
     -- create main frame
     instance.singleAuraFrame = CreateFrame("Frame", "tracker_ID" .. spellID, parent)
@@ -64,60 +124,8 @@ function AuraTrackerFrame:New (spellID, unit, X, Y, parent)
     local counter = 0
     -- onEvent script
     instance.singleAuraFrame:SetScript("OnEvent", function(self, event, unitTarget, updateInfo)
-        -- -- if(updateInfo.addedAuras ~= nil and updateInfo.addedAuras[1] ~= nil and updateInfo.addedAuras[1].spellId == 33763) then
-        -- --     print("This One")
-        -- -- else
-        -- --     if(updateInfo.addedAuras ~= nil) then
-        -- --     -- print(updateInfo.spellID, instance.trackedSpellID)
-        -- --     end
-            
-        -- -- end
-        -- for k, v in pairs(updateInfo) do print("key:", k, "value:", v) end
-        -- if(updateInfo.updatedAuraInstanceIDs ~= nil) then
-        --     for _, v in pairs(updateInfo.updatedAuraInstanceIDs) do
-        --         local aura = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, v)
-        --         print("shit fuck dick" , aura)
-        --         --print(aura.auraInstanceID, aura.name, aura.sourceUnit, aura.isFromPlayerOrPlayerPet)
-        --     end
-        -- end
-        -- if(updateInfo.removedAuraInstanceIDs ~= nil) then
-        -- --for k, v in pairs(updateInfo.removedAuraInstanceIDs) do print("key:", k, "value:", v) end
-        -- end
-        -- if(updateInfo.addedAuras ~= nil) then
-        -- --for k, v in pairs(updateInfo.addedAuras) do print("key:", k, "value:", v) end
-        --     for i = 1, 10, 1 do
-        --         if updateInfo.addedAuras[i] == nil then
-        --             break
-        --         else
-        --             --print(updateInfo.addedAuras[i].name, updateInfo.addedAuras[i].auraInstanceID, updateInfo.addedAuras[i].spellId)
-        --         end
-        --     end
-        -- end
-        -- -- print(event, unitTarget, updateInfo)
-        -- -- print("heo", instance.trackedSpellID, instance.unitType)
-        if(updateInfo.addedAuras ~= nil) then
-            for _, aura in ipairs(updateInfo.addedAuras) do
-                -- print("---------")
-            for k, v in pairs(aura) do 
 
-                if issecretvalue(v) == true then
-                    
-                    -- print("key:", k, "value:", v, issecretvalue(v))
-                    
-                    -- if (k == "spellId" and v == 8936) then
-                    --     print(issecretvalue(k), issecretvalue(v))
-                    -- end
-                end
-            end
-
-        end
-        end
-        --print("spellId: ",  instance.trackedSpellID, "counter: ", counter)
-        counter = counter + 1
-
-        UpdateSingleAura(self, instance.trackedSpellID, unitTarget)
-
-        --print("-----------------")
+        UpdateSingleAura(self, unitTarget, updateInfo, instance)
     end)
 
     -- onUpdate script (update of countdown text)
